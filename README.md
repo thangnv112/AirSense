@@ -62,7 +62,8 @@ TELEGRAM_CHAT_ID=your-chat-id
 ## ⚙️ Khởi chạy hệ thống
 
 ```bash
-python server2.py
+python3 server2.py 
+python3 test_data.py # 2 tiến trình khác nhau
 ```
 
 Mở trình duyệt và truy cập:
@@ -77,8 +78,6 @@ http://localhost:5000/
 - Biểu đồ trực tiếp theo thời gian
 - Cài đặt ngưỡng cảnh báo động
 - Lịch sử cảnh báo vượt ngưỡng
-
-> (Bạn có thể chèn ảnh minh họa tại đây nếu muốn)
 
 ## 🔐 Lưu ý bảo mật
 
