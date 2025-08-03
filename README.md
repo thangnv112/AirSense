@@ -86,11 +86,6 @@ http://localhost:5000/
 - Không commit `.env` hoặc thư mục `venv` lên Git
 - File `.gitignore` đã được cấu hình để loại trừ các mục nhạy cảm
 
-## 🧑‍💻 Tác giả
-
-- Tên: [Tên của bạn]
-- Liên hệ: [Email hoặc GitHub Profile]
-
 ## 📄 License
 
 MIT License
