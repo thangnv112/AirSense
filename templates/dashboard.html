@@ -153,7 +153,7 @@
             100% { transform: scale(1); }
         }
 
-        .co2-card { border-left: 5px solid #FF6B6B; }
+        .tvoc-card { border-left: 5px solid #FF6B6B; }
         .temp-card { border-left: 5px solid #4ECDC4; }
         .humidity-card { border-left: 5px solid #45B7D1; }
 
@@ -316,13 +316,13 @@
         </div>
 
         <div class="sensors-grid">
-            <!-- CO₂ Card -->
-            <div class="card sensor-card co2-card">
-                <h3><span class="icon">💨</span> Nồng độ CO₂</h3>
-                <div class="sensor-value" id="co2Value">
-                    0<span class="sensor-unit">ppm</span>
+            <!-- TVOC Card -->
+            <div class="card sensor-card tvoc-card">
+                <h3><span class="icon">💨</span> Nồng độ TVOC</h3>
+                <div class="sensor-value" id="tvocValue">
+                    0<span class="sensor-unit">mg/m³</span>
                 </div>
-                <div class="sensor-status status-normal" id="co2Status">Bình thường</div>
+                <div class="sensor-status status-normal" id="tvocStatus">Bình thường</div>
             </div>
 
             <!-- Temperature Card -->
@@ -362,8 +362,8 @@
                 <form id="thresholdForm">
                     <div class="form-row">
                         <div class="form-control">
-                            <label for="co2Max">CO₂ tối đa (ppm)</label>
-                            <input type="number" id="co2Max" name="co2_max" value="1000" min="400" max="5000" step="50">
+                            <label for="tvocMax">TVOC tối đa (mg/m³)</label>
+                            <input type="number" id="tvocMax" name="tvoc_max" value="0.5" min="0" max="5" step="0.1">
                         </div>
                         <div class="form-control">
                             <label for="tempMin">Nhiệt độ tối thiểu (°C)</label>
@@ -401,7 +401,7 @@
         let sensorChart;
         let chartData = {
             labels: [],
-            co2Data: [],
+            tvocData: [],
             tempData: [],
             humidityData: []
         };
@@ -461,15 +461,15 @@
         // Cập nhật hiển thị dữ liệu sensor
         function updateSensorDisplay(data) {
             // Cập nhật giá trị
-            document.getElementById('co2Value').innerHTML = 
-                `${data.co2}<span class="sensor-unit">ppm</span>`;
+            document.getElementById('tvocValue').innerHTML = 
+                `${data.tvoc.toFixed(2)}<span class="sensor-unit">mg/m³</span>`;
             document.getElementById('tempValue').innerHTML = 
                 `${data.temperature}<span class="sensor-unit">°C</span>`;
             document.getElementById('humidityValue').innerHTML = 
                 `${data.humidity}<span class="sensor-unit">%</span>`;
 
             // Cập nhật trạng thái
-            updateSensorStatus('co2', data.co2);
+            updateSensorStatus('tvoc', data.tvoc);
             updateSensorStatus('temp', data.temperature);
             updateSensorStatus('humidity', data.humidity);
 
@@ -485,7 +485,7 @@
             let status = 'status-normal';
             let text = 'Bình thường';
             
-            if (sensorType === 'co2' && value > 1000) {
+            if (sensorType === 'tvoc' && value > 0.5) {
                 status = 'status-danger';
                 text = 'Quá cao';
             } else if (sensorType === 'temp' && (value < 18 || value > 30)) {
@@ -511,8 +511,8 @@
                     labels: chartData.labels,
                     datasets: [
                         {
-                            label: 'CO₂ (ppm)',
-                            data: chartData.co2Data,
+                            label: 'TVOC (mg/m³)',
+                            data: chartData.tvocData,
                             borderColor: '#FF6B6B',
                             backgroundColor: 'rgba(255, 107, 107, 0.1)',
                             tension: 0.4,
@@ -564,14 +564,14 @@
                             position: 'left',
                             title: {
                                 display: true,
-                                text: 'CO₂ (ppm)',
+                                text: 'TVOC (mg/m³)',
                                 color: '#FF6B6B'
                             },
                             grid: {
                                 color: 'rgba(255, 107, 107, 0.1)'
                             },
-                            min: 300,
-                            max: 1500
+                            min: 0,
+                            max: 2
                         },
                         y1: {
                             type: 'linear',
@@ -623,7 +623,7 @@
             
             // Thêm dữ liệu mới
             chartData.labels.push(now);
-            chartData.co2Data.push(data.co2);
+            chartData.tvocData.push(data.tvoc);
             chartData.tempData.push(data.temperature);
             chartData.humidityData.push(data.humidity);
             
@@ -631,14 +631,14 @@
             if (chartData.labels.length > 10) {
                 console.log('Giới hạn dữ liệu, xóa điểm cũ:', chartData.labels.length);
                 chartData.labels.shift();
-                chartData.co2Data.shift();
+                chartData.tvocData.shift();
                 chartData.tempData.shift();
                 chartData.humidityData.shift();
             }
             
             // Cập nhật dữ liệu biểu đồ
             sensorChart.data.labels = chartData.labels;
-            sensorChart.data.datasets[0].data = chartData.co2Data;
+            sensorChart.data.datasets[0].data = chartData.tvocData;
             sensorChart.data.datasets[1].data = chartData.tempData;
             sensorChart.data.datasets[2].data = chartData.humidityData;
             
@@ -647,7 +647,7 @@
             
             console.log('📈 Biểu đồ đã được cập nhật:', {
                 time: now,
-                co2: data.co2,
+                tvoc: data.tvoc,
                 temp: data.temperature,
                 humidity: data.humidity
             });
@@ -661,7 +661,7 @@
                 .then(data => {
                     console.log('📥 Dữ liệu hiện tại:', data);
                     updateSensorDisplay({
-                        co2: data.co2,
+                        tvoc: data.tvoc,
                         temperature: data.temperature,
                         humidity: data.humidity,
                         timestamp: new Date(data.timestamp).toLocaleTimeString()
@@ -684,7 +684,7 @@
                     
                     // Reset chart data
                     chartData.labels = [];
-                    chartData.co2Data = [];
+                    chartData.tvocData = [];
                     chartData.tempData = [];
                     chartData.humidityData = [];
                     
@@ -694,7 +694,7 @@
                         recentData.forEach(item => {
                             const time = new Date(item.timestamp).toLocaleTimeString();
                             chartData.labels.push(time);
-                            chartData.co2Data.push(item.co2);
+                            chartData.tvocData.push(item.tvoc);
                             chartData.tempData.push(item.temperature);
                             chartData.humidityData.push(item.humidity);
                         });
@@ -702,14 +702,14 @@
                         // Nếu không có dữ liệu lịch sử, tạo 1 điểm mặc định
                         const now = new Date().toLocaleTimeString();
                         chartData.labels.push(now);
-                        chartData.co2Data.push(400);
+                        chartData.tvocData.push(0);
                         chartData.tempData.push(25);
                         chartData.humidityData.push(50);
                     }
                     
                     // Cập nhật biểu đồ
                     sensorChart.data.labels = chartData.labels;
-                    sensorChart.data.datasets[0].data = chartData.co2Data;
+                    sensorChart.data.datasets[0].data = chartData.tvocData;
                     sensorChart.data.datasets[1].data = chartData.tempData;
                     sensorChart.data.datasets[2].data = chartData.humidityData;
                     sensorChart.update();
@@ -719,12 +719,12 @@
                     // Tạo dữ liệu mặc định nếu lỗi
                     const now = new Date().toLocaleTimeString();
                     chartData.labels = [now];
-                    chartData.co2Data = [400];
+                    chartData.tvocData = [0];
                     chartData.tempData = [25];
                     chartData.humidityData = [50];
                     
                     sensorChart.data.labels = chartData.labels;
-                    sensorChart.data.datasets[0].data = chartData.co2Data;
+                    sensorChart.data.datasets[0].data = chartData.tvocData;
                     sensorChart.data.datasets[1].data = chartData.tempData;
                     sensorChart.data.datasets[2].data = chartData.humidityData;
                     sensorChart.update();
@@ -741,7 +741,7 @@
                 
                 // Lấy dữ liệu từ form
                 const formData = {
-                    co2_max: parseFloat(document.getElementById('co2Max').value),
+                    tvoc_max: parseFloat(document.getElementById('tvocMax').value),
                     temp_min: parseFloat(document.getElementById('tempMin').value),
                     temp_max: parseFloat(document.getElementById('tempMax').value),
                     humidity_min: parseFloat(document.getElementById('humidityMin').value),
@@ -782,7 +782,7 @@
 
         // Cập nhật form ngưỡng
         function updateThresholdForm(thresholds) {
-            document.getElementById('co2Max').value = thresholds.co2_max;
+            document.getElementById('tvocMax').value = thresholds.tvoc_max;
             document.getElementById('tempMin').value = thresholds.temp_min;
             document.getElementById('tempMax').value = thresholds.temp_max;
             document.getElementById('humidityMin').value = thresholds.humidity_min;
