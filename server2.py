@@ -342,9 +342,10 @@ def start_mqtt():
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🌱 Smart Indoor Air Quality Monitoring Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -356,7 +357,7 @@ HTML_TEMPLATE = """
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             color: #333;
@@ -377,7 +378,7 @@ HTML_TEMPLATE = """
         .header h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .header p {
@@ -386,12 +387,12 @@ HTML_TEMPLATE = """
         }
 
         .status-bar {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 15px;
             padding: 15px;
             margin-bottom: 25px;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
             text-align: center;
         }
@@ -423,18 +424,18 @@ HTML_TEMPLATE = """
         }
 
         .card {
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
         }
 
         .card h3 {
@@ -454,7 +455,7 @@ HTML_TEMPLATE = """
             font-size: 3rem;
             font-weight: bold;
             margin: 15px 0;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
 
         .sensor-unit {
@@ -474,12 +475,12 @@ HTML_TEMPLATE = """
         }
 
         .status-normal {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
+            background: linear-gradient(45deg, #4caf50, #45a049);
             color: white;
         }
 
         .status-warning {
-            background: linear-gradient(45deg, #FF9800, #f57c00);
+            background: linear-gradient(45deg, #ff9800, #f57c00);
             color: white;
         }
 
@@ -490,14 +491,30 @@ HTML_TEMPLATE = """
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
-        .tvoc-card { border-left: 5px solid #FF6B6B; }
-        .temp-card { border-left: 5px solid #4ECDC4; }
-        .humidity-card { border-left: 5px solid #45B7D1; }
+        .tvoc-card {
+            border-left: 5px solid #ff6b6b;
+        }
+
+        .temp-card {
+            border-left: 5px solid #4ecdc4;
+        }
+
+        .humidity-card {
+            border-left: 5px solid #45b7d1;
+        }
 
         .chart-container {
             position: relative;
@@ -537,7 +554,7 @@ HTML_TEMPLATE = """
             border-radius: 10px;
             font-size: 1rem;
             transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            background: rgba(255,255,255,0.8);
+            background: rgba(255, 255, 255, 0.8);
         }
 
         .form-control input:focus {
@@ -585,8 +602,15 @@ HTML_TEMPLATE = """
         }
 
         @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .alert-danger {
@@ -601,7 +625,7 @@ HTML_TEMPLATE = """
 
         .last-update {
             text-align: center;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255, 255, 255, 0.8);
             font-size: 0.9rem;
             margin-top: 10px;
         }
@@ -622,7 +646,7 @@ HTML_TEMPLATE = """
         }
 
         .connected {
-            background: #4CAF50;
+            background: #4caf50;
             color: white;
         }
 
@@ -633,7 +657,7 @@ HTML_TEMPLATE = """
         }
 
         .success-message {
-            background: #4CAF50;
+            background: #4caf50;
             color: white;
             padding: 10px 20px;
             border-radius: 10px;
@@ -642,6 +666,7 @@ HTML_TEMPLATE = """
         }
     </style>
 </head>
+
 <body>
     <div class="connection-status" id="connectionStatus">
         🔴 Đang kết nối...
@@ -664,7 +689,9 @@ HTML_TEMPLATE = """
                 <div class="sensor-value" id="tvocValue">
                     0<span class="sensor-unit">mg/m³</span>
                 </div>
-                <div class="sensor-status status-normal" id="tvocStatus">Bình thường</div>
+                <div class="sensor-status status-normal" id="tvocStatus">
+                    Bình thường
+                </div>
             </div>
 
             <!-- Temperature Card -->
@@ -673,7 +700,9 @@ HTML_TEMPLATE = """
                 <div class="sensor-value" id="tempValue">
                     0<span class="sensor-unit">°C</span>
                 </div>
-                <div class="sensor-status status-normal" id="tempStatus">Bình thường</div>
+                <div class="sensor-status status-normal" id="tempStatus">
+                    Bình thường
+                </div>
             </div>
 
             <!-- Humidity Card -->
@@ -682,13 +711,15 @@ HTML_TEMPLATE = """
                 <div class="sensor-value" id="humidityValue">
                     0<span class="sensor-unit">%</span>
                 </div>
-                <div class="sensor-status status-normal" id="humidityStatus">Bình thường</div>
+                <div class="sensor-status status-normal" id="humidityStatus">
+                    Bình thường
+                </div>
             </div>
         </div>
 
         <div class="grid">
             <!-- Chart Card -->
-            <div class="card" style="grid-column: 1 / -1;">
+            <div class="card" style="grid-column: 1 / -1">
                 <h3><span class="icon">📊</span> Biểu đồ theo thời gian</h3>
                 <div class="chart-container">
                     <canvas id="sensorChart"></canvas>
@@ -696,41 +727,65 @@ HTML_TEMPLATE = """
             </div>
 
             <!-- Controls Card -->
-            <div class="card controls-card">
-                <h3><span class="icon">⚙️</span> Cài đặt ngưỡng cảnh báo</h3>
-                <div class="success-message" id="successMessage">
-                    ✅ Cập nhật ngưỡng thành công!
-                </div>
-                <form id="thresholdForm">
-                    <div class="form-row">
+            <form id="thresholdForm" style="
+            width: 100%;
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+          ">
+                <div class="card tvoc-card">
+                    <h3><span class="icon">💨</span> Cài đặt ngưỡng TVOC</h3>
+                    <div class="form-group">
                         <div class="form-control">
                             <label for="tvocMax">TVOC tối đa (mg/m³)</label>
-                            <input type="number" id="tvocMax" name="tvoc_max" value="0.5" min="0" max="5" step="0.1">
+                            <input type="number" id="tvocMax" name="tvoc_max" value="0.5" min="0" max="5" step="0.1" />
                         </div>
+                    </div>
+                </div>
+
+                <!-- Temperature Threshold Card -->
+                <div class="card temp-card">
+                    <h3><span class="icon">🌡️</span> Cài đặt ngưỡng Nhiệt độ</h3>
+                    <div class="form-row">
                         <div class="form-control">
                             <label for="tempMin">Nhiệt độ tối thiểu (°C)</label>
-                            <input type="number" id="tempMin" name="temp_min" value="18" min="0" max="50" step="1">
+                            <input type="number" id="tempMin" name="temp_min" value="18" min="0" max="50" step="1" />
                         </div>
                         <div class="form-control">
                             <label for="tempMax">Nhiệt độ tối đa (°C)</label>
-                            <input type="number" id="tempMax" name="temp_max" value="30" min="0" max="50" step="1">
+                            <input type="number" id="tempMax" name="temp_max" value="30" min="0" max="50" step="1" />
                         </div>
                     </div>
+                </div>
+
+                <!-- Humidity Threshold Card -->
+                <div class="card humidity-card">
+                    <h3><span class="icon">💧</span> Cài đặt ngưỡng Độ ẩm</h3>
                     <div class="form-row">
                         <div class="form-control">
                             <label for="humidityMin">Độ ẩm tối thiểu (%)</label>
-                            <input type="number" id="humidityMin" name="humidity_min" value="30" min="0" max="100" step="5">
+                            <input type="number" id="humidityMin" name="humidity_min" value="30" min="0" max="100"
+                                step="5" />
                         </div>
                         <div class="form-control">
                             <label for="humidityMax">Độ ẩm tối đa (%)</label>
-                            <input type="number" id="humidityMax" name="humidity_max" value="70" min="0" max="100" step="5">
-                        </div>
-                        <div class="form-control" style="display: flex; align-items: end;">
-                            <button type="submit" class="btn">💾 Cập nhật ngưỡng</button>
+                            <input type="number" id="humidityMax" name="humidity_max" value="70" min="0" max="100"
+                                step="5" />
                         </div>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div style="text-align: center; grid-column: 1 / -1">
+                    <button type="submit" class="btn" style="background: linear-gradient(45deg, #2196f3, #1976d2)">
+                        💾 Cập nhật ngưỡng
+                    </button>
+                    <div class="success-message" id="successMessage" style="margin-top: 10px">
+                        ✅ Cập nhật ngưỡng thành công!
+                    </div>
+                </div>
+            </form>
         </div>
 
         <!-- Alerts -->
@@ -745,12 +800,12 @@ HTML_TEMPLATE = """
             labels: [],
             tvocData: [],
             tempData: [],
-            humidityData: []
+            humidityData: [],
         };
 
         // Khởi tạo khi trang load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Đang khởi tạo dashboard...');
+        document.addEventListener("DOMContentLoaded", function () {
+            console.log("🚀 Đang khởi tạo dashboard...");
             initializeSocket();
             initializeChart();
             loadInitialData();
@@ -760,280 +815,289 @@ HTML_TEMPLATE = """
         // Khởi tạo Socket.IO
         function initializeSocket() {
             socket = io();
-            
+
             // Kết nối thành công
-            socket.on('connect', function() {
-                console.log('✅ Socket.IO kết nối thành công');
+            socket.on("connect", function () {
+                console.log("✅ Socket.IO kết nối thành công");
                 updateConnectionStatus(true);
             });
 
             // Mất kết nối
-            socket.on('disconnect', function() {
-                console.log('❌ Socket.IO mất kết nối');
+            socket.on("disconnect", function () {
+                console.log("❌ Socket.IO mất kết nối");
                 updateConnectionStatus(false);
             });
 
             // Nhận dữ liệu sensor real-time
-            socket.on('sensor_data', function(data) {
-                console.log('📊 Nhận dữ liệu sensor:', data);
+            socket.on("sensor_data", function (data) {
+                console.log("📊 Nhận dữ liệu sensor:", data);
                 updateSensorDisplay(data);
                 updateChart(data);
                 showAlerts(data.alerts || []);
             });
 
             // Nhận thông báo cập nhật ngưỡng
-            socket.on('thresholds_updated', function(thresholds) {
-                console.log('⚙️ Ngưỡng được cập nhật:', thresholds);
+            socket.on("thresholds_updated", function (thresholds) {
+                console.log("⚙️ Ngưỡng được cập nhật:", thresholds);
                 updateThresholdForm(thresholds);
             });
         }
 
         // Cập nhật trạng thái kết nối
         function updateConnectionStatus(connected) {
-            const statusEl = document.getElementById('connectionStatus');
+            const statusEl = document.getElementById("connectionStatus");
             if (connected) {
-                statusEl.textContent = '🟢 Đã kết nối';
-                statusEl.className = 'connection-status connected';
+                statusEl.textContent = "🟢 Đã kết nối";
+                statusEl.className = "connection-status connected";
             } else {
-                statusEl.textContent = '🔴 Mất kết nối';
-                statusEl.className = 'connection-status disconnected';
+                statusEl.textContent = "🔴 Mất kết nối";
+                statusEl.className = "connection-status disconnected";
             }
         }
 
         // Cập nhật hiển thị dữ liệu sensor
         function updateSensorDisplay(data) {
             // Cập nhật giá trị
-            document.getElementById('tvocValue').innerHTML = 
-                `${data.tvoc.toFixed(2)}<span class="sensor-unit">mg/m³</span>`;
-            document.getElementById('tempValue').innerHTML = 
-                `${data.temperature}<span class="sensor-unit">°C</span>`;
-            document.getElementById('humidityValue').innerHTML = 
-                `${data.humidity}<span class="sensor-unit">%</span>`;
+            document.getElementById("tvocValue").innerHTML = `${data.tvoc.toFixed(
+                2
+            )}<span class="sensor-unit">mg/m³</span>`;
+            document.getElementById(
+                "tempValue"
+            ).innerHTML = `${data.temperature}<span class="sensor-unit">°C</span>`;
+            document.getElementById(
+                "humidityValue"
+            ).innerHTML = `${data.humidity}<span class="sensor-unit">%</span>`;
 
             // Cập nhật trạng thái
-            updateSensorStatus('tvoc', data.tvoc);
-            updateSensorStatus('temp', data.temperature);
-            updateSensorStatus('humidity', data.humidity);
+            updateSensorStatus("tvoc", data.tvoc);
+            updateSensorStatus("temp", data.temperature);
+            updateSensorStatus("humidity", data.humidity);
 
             // Cập nhật thời gian
-            document.getElementById('lastUpdate').textContent = 
-                `Cập nhật lần cuối: ${data.timestamp}`;
+            document.getElementById(
+                "lastUpdate"
+            ).textContent = `Cập nhật lần cuối: ${data.timestamp}`;
         }
 
         // Cập nhật trạng thái sensor
         function updateSensorStatus(sensorType, value) {
-            const statusEl = document.getElementById(sensorType === 'temp' ? 'tempStatus' : sensorType + 'Status');
-            
-            let status = 'status-normal';
-            let text = 'Bình thường';
-            
-            if (sensorType === 'tvoc' && value > 0.5) {
-                status = 'status-danger';
-                text = 'Quá cao';
-            } else if (sensorType === 'temp' && (value < 18 || value > 30)) {
-                status = 'status-warning';
-                text = 'Bất thường';
-            } else if (sensorType === 'humidity' && (value < 30 || value > 70)) {
-                status = 'status-warning';
-                text = 'Bất thường';
+            const statusEl = document.getElementById(
+                sensorType === "temp" ? "tempStatus" : sensorType + "Status"
+            );
+
+            let status = "status-normal";
+            let text = "Bình thường";
+
+            if (sensorType === "tvoc" && value > 0.5) {
+                status = "status-danger";
+                text = "Quá cao";
+            } else if (sensorType === "temp" && (value < 18 || value > 30)) {
+                status = "status-warning";
+                text = "Bất thường";
+            } else if (sensorType === "humidity" && (value < 30 || value > 70)) {
+                status = "status-warning";
+                text = "Bất thường";
             }
-            
+
             statusEl.className = `sensor-status ${status}`;
             statusEl.textContent = text;
         }
 
         // Khởi tạo biểu đồ
         function initializeChart() {
-            const ctx = document.getElementById('sensorChart').getContext('2d');
-            console.log('📊 Đang khởi tạo biểu đồ...');
-            
+            const ctx = document.getElementById("sensorChart").getContext("2d");
+            console.log("📊 Đang khởi tạo biểu đồ...");
+
             sensorChart = new Chart(ctx, {
-                type: 'line',
+                type: "line",
                 data: {
                     labels: chartData.labels,
                     datasets: [
                         {
-                            label: 'TVOC (mg/m³)',
+                            label: "TVOC (mg/m³)",
                             data: chartData.tvocData,
-                            borderColor: '#FF6B6B',
-                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            borderColor: "#FF6B6B",
+                            backgroundColor: "rgba(255, 107, 107, 0.1)",
                             tension: 0.4,
-                            yAxisID: 'y',
-                            fill: false
+                            yAxisID: "y",
+                            fill: false,
                         },
                         {
-                            label: 'Nhiệt độ (°C)',
+                            label: "Nhiệt độ (°C)",
                             data: chartData.tempData,
-                            borderColor: '#4ECDC4',
-                            backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                            borderColor: "#4ECDC4",
+                            backgroundColor: "rgba(78, 205, 196, 0.1)",
                             tension: 0.4,
-                            yAxisID: 'y1',
-                            fill: false
+                            yAxisID: "y1",
+                            fill: false,
                         },
                         {
-                            label: 'Độ ẩm (%)',
+                            label: "Độ ẩm (%)",
                             data: chartData.humidityData,
-                            borderColor: '#45B7D1',
-                            backgroundColor: 'rgba(69, 183, 209, 0.1)',
+                            borderColor: "#45B7D1",
+                            backgroundColor: "rgba(69, 183, 209, 0.1)",
                             tension: 0.4,
-                            yAxisID: 'y1',
-                            fill: false
-                        }
-                    ]
+                            yAxisID: "y1",
+                            fill: false,
+                        },
+                    ],
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     interaction: {
                         intersect: false,
-                        mode: 'index'
+                        mode: "index",
                     },
                     scales: {
                         x: {
                             display: true,
                             title: {
                                 display: true,
-                                text: 'Thời gian',
-                                color: '#666'
+                                text: "Thời gian",
+                                color: "#666",
                             },
                             grid: {
-                                color: 'rgba(0,0,0,0.1)'
-                            }
+                                color: "rgba(0,0,0,0.1)",
+                            },
                         },
                         y: {
-                            type: 'linear',
+                            type: "linear",
                             display: true,
-                            position: 'left',
+                            position: "left",
                             title: {
                                 display: true,
-                                text: 'TVOC (mg/m³)',
-                                color: '#FF6B6B'
+                                text: "TVOC (mg/m³)",
+                                color: "#FF6B6B",
                             },
                             grid: {
-                                color: 'rgba(255, 107, 107, 0.1)'
+                                color: "rgba(255, 107, 107, 0.1)",
                             },
                             min: 0,
-                            max: 2
+                            max: 2,
                         },
                         y1: {
-                            type: 'linear',
+                            type: "linear",
                             display: true,
-                            position: 'right',
+                            position: "right",
                             title: {
                                 display: true,
-                                text: 'Nhiệt độ (°C) / Độ ẩm (%)',
-                                color: '#4ECDC4'
+                                text: "Nhiệt độ (°C) / Độ ẩm (%)",
+                                color: "#4ECDC4",
                             },
                             grid: {
                                 drawOnChartArea: false,
-                                color: 'rgba(78, 205, 196, 0.1)'
+                                color: "rgba(78, 205, 196, 0.1)",
                             },
                             min: 0,
-                            max: 100
-                        }
+                            max: 100,
+                        },
                     },
                     plugins: {
                         legend: {
                             display: true,
-                            position: 'top',
+                            position: "top",
                             labels: {
-                                color: '#333',
+                                color: "#333",
                                 usePointStyle: true,
-                                padding: 20
-                            }
+                                padding: 20,
+                            },
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.8)',
-                            titleColor: 'white',
-                            bodyColor: 'white',
-                            borderColor: 'rgba(255,255,255,0.2)',
-                            borderWidth: 1
-                        }
+                            backgroundColor: "rgba(0,0,0,0.8)",
+                            titleColor: "white",
+                            bodyColor: "white",
+                            borderColor: "rgba(255,255,255,0.2)",
+                            borderWidth: 1,
+                        },
                     },
                     animation: {
-                        duration: 750
-                    }
-                }
+                        duration: 750,
+                    },
+                },
             });
-            
-            console.log('✅ Biểu đồ đã được khởi tạo thành công');
+
+            console.log("✅ Biểu đồ đã được khởi tạo thành công");
         }
 
         // Cập nhật biểu đồ với dữ liệu real-time
         function updateChart(data) {
             const now = data.timestamp || new Date().toLocaleTimeString();
-            
+
             // Thêm dữ liệu mới
             chartData.labels.push(now);
             chartData.tvocData.push(data.tvoc);
             chartData.tempData.push(data.temperature);
             chartData.humidityData.push(data.humidity);
-            
+
             // Giới hạn số điểm hiển thị (10 điểm gần nhất)
             if (chartData.labels.length > 10) {
-                console.log('Giới hạn dữ liệu, xóa điểm cũ:', chartData.labels.length);
+                console.log(
+                    "Giới hạn dữ liệu, xóa điểm cũ:",
+                    chartData.labels.length
+                );
                 chartData.labels.shift();
                 chartData.tvocData.shift();
                 chartData.tempData.shift();
                 chartData.humidityData.shift();
             }
-            
+
             // Cập nhật dữ liệu biểu đồ
             sensorChart.data.labels = chartData.labels;
             sensorChart.data.datasets[0].data = chartData.tvocData;
             sensorChart.data.datasets[1].data = chartData.tempData;
             sensorChart.data.datasets[2].data = chartData.humidityData;
-            
+
             // Cập nhật biểu đồ với animation mượt
-            sensorChart.update('active');
-            
-            console.log('📈 Biểu đồ đã được cập nhật:', {
+            sensorChart.update("active");
+
+            console.log("📈 Biểu đồ đã được cập nhật:", {
                 time: now,
                 tvoc: data.tvoc,
                 temp: data.temperature,
-                humidity: data.humidity
+                humidity: data.humidity,
             });
         }
 
         // Load dữ liệu ban đầu
         function loadInitialData() {
             // Load dữ liệu hiện tại
-            fetch('/api/current-data')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('📥 Dữ liệu hiện tại:', data);
+            fetch("/api/current-data")
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log("📥 Dữ liệu hiện tại:", data);
                     updateSensorDisplay({
                         tvoc: data.tvoc,
                         temperature: data.temperature,
                         humidity: data.humidity,
-                        timestamp: new Date(data.timestamp).toLocaleTimeString()
+                        timestamp: new Date(data.timestamp).toLocaleTimeString(),
                     });
-                    
+
                     // Cập nhật form ngưỡng
                     if (data.thresholds) {
                         updateThresholdForm(data.thresholds);
                     }
                 })
-                .catch(error => {
-                    console.error('❌ Lỗi load dữ liệu hiện tại:', error);
+                .catch((error) => {
+                    console.error("❌ Lỗi load dữ liệu hiện tại:", error);
                 });
 
             // Load dữ liệu lịch sử cho biểu đồ
-            fetch('/api/history?hours=1')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('📈 Dữ liệu lịch sử:', data);
-                    
+            fetch("/api/history?hours=1")
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log("📈 Dữ liệu lịch sử:", data);
+
                     // Reset chart data
                     chartData.labels = [];
                     chartData.tvocData = [];
                     chartData.tempData = [];
                     chartData.humidityData = [];
-                    
+
                     // Nếu có dữ liệu lịch sử, thêm vào biểu đồ
                     if (data && data.length > 0) {
                         const recentData = data.slice(-5); // Chỉ lấy 5 điểm cuối
-                        recentData.forEach(item => {
+                        recentData.forEach((item) => {
                             const time = new Date(item.timestamp).toLocaleTimeString();
                             chartData.labels.push(time);
                             chartData.tvocData.push(item.tvoc);
@@ -1048,7 +1112,7 @@ HTML_TEMPLATE = """
                         chartData.tempData.push(25);
                         chartData.humidityData.push(50);
                     }
-                    
+
                     // Cập nhật biểu đồ
                     sensorChart.data.labels = chartData.labels;
                     sensorChart.data.datasets[0].data = chartData.tvocData;
@@ -1056,15 +1120,15 @@ HTML_TEMPLATE = """
                     sensorChart.data.datasets[2].data = chartData.humidityData;
                     sensorChart.update();
                 })
-                .catch(error => {
-                    console.error('❌ Lỗi load dữ liệu lịch sử:', error);
+                .catch((error) => {
+                    console.error("❌ Lỗi load dữ liệu lịch sử:", error);
                     // Tạo dữ liệu mặc định nếu lỗi
                     const now = new Date().toLocaleTimeString();
                     chartData.labels = [now];
                     chartData.tvocData = [0];
                     chartData.tempData = [25];
                     chartData.humidityData = [50];
-                    
+
                     sensorChart.data.labels = chartData.labels;
                     sensorChart.data.datasets[0].data = chartData.tvocData;
                     sensorChart.data.datasets[1].data = chartData.tempData;
@@ -1075,82 +1139,87 @@ HTML_TEMPLATE = """
 
         // Thiết lập form cập nhật ngưỡng
         function setupThresholdForm() {
-            const form = document.getElementById('thresholdForm');
-            
-            form.addEventListener('submit', function(e) {
+            const form = document.getElementById("thresholdForm");
+
+            form.addEventListener("submit", function (e) {
                 e.preventDefault(); // Ngăn form submit mặc định
-                console.log('📝 Đang cập nhật ngưỡng...');
-                
+                console.log("📝 Đang cập nhật ngưỡng...");
+
                 // Lấy dữ liệu từ form
                 const formData = {
-                    tvoc_max: parseFloat(document.getElementById('tvocMax').value),
-                    temp_min: parseFloat(document.getElementById('tempMin').value),
-                    temp_max: parseFloat(document.getElementById('tempMax').value),
-                    humidity_min: parseFloat(document.getElementById('humidityMin').value),
-                    humidity_max: parseFloat(document.getElementById('humidityMax').value)
+                    tvoc_max: parseFloat(document.getElementById("tvocMax").value),
+                    temp_min: parseFloat(document.getElementById("tempMin").value),
+                    temp_max: parseFloat(document.getElementById("tempMax").value),
+                    humidity_min: parseFloat(
+                        document.getElementById("humidityMin").value
+                    ),
+                    humidity_max: parseFloat(
+                        document.getElementById("humidityMax").value
+                    ),
                 };
-                
-                console.log('📤 Dữ liệu gửi:', formData);
-                
+
+                console.log("📤 Dữ liệu gửi:", formData);
+
                 // Gửi POST request
-                fetch('/api/thresholds', {
-                    method: 'POST',
+                fetch("/api/thresholds", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
+                        "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(formData),
                 })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('✅ Cập nhật thành công:', data);
-                    
-                    if (data.success) {
-                        // Hiển thị thông báo thành công
-                        showSuccessMessage();
-                        
-                        // Cập nhật lại form với dữ liệu mới
-                        updateThresholdForm(data.thresholds);
-                    } else {
-                        console.error('❌ Lỗi cập nhật:', data.error);
-                        alert('Lỗi cập nhật ngưỡng: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('❌ Lỗi kết nối:', error);
-                    alert('Lỗi kết nối khi cập nhật ngưỡng');
-                });
+                    .then((response) => response.json())
+                    .then((data) => {
+                        console.log("✅ Cập nhật thành công:", data);
+
+                        if (data.success) {
+                            // Hiển thị thông báo thành công
+                            showSuccessMessage();
+
+                            // Cập nhật lại form với dữ liệu mới
+                            updateThresholdForm(data.thresholds);
+                        } else {
+                            console.error("❌ Lỗi cập nhật:", data.error);
+                            alert("Lỗi cập nhật ngưỡng: " + data.error);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("❌ Lỗi kết nối:", error);
+                        alert("Lỗi kết nối khi cập nhật ngưỡng");
+                    });
             });
         }
 
         // Cập nhật form ngưỡng
         function updateThresholdForm(thresholds) {
-            document.getElementById('tvocMax').value = thresholds.tvoc_max;
-            document.getElementById('tempMin').value = thresholds.temp_min;
-            document.getElementById('tempMax').value = thresholds.temp_max;
-            document.getElementById('humidityMin').value = thresholds.humidity_min;
-            document.getElementById('humidityMax').value = thresholds.humidity_max;
+            document.getElementById("tvocMax").value = thresholds.tvoc_max;
+            document.getElementById("tempMin").value = thresholds.temp_min;
+            document.getElementById("tempMax").value = thresholds.temp_max;
+            document.getElementById("humidityMin").value = thresholds.humidity_min;
+            document.getElementById("humidityMax").value = thresholds.humidity_max;
         }
 
         // Hiển thị thông báo thành công
         function showSuccessMessage() {
-            const message = document.getElementById('successMessage');
-            message.style.display = 'block';
-            
+            const message = document.getElementById("successMessage");
+            message.style.display = "block";
+
             setTimeout(() => {
-                message.style.display = 'none';
+                message.style.display = "none";
             }, 3000);
         }
 
         // Hiển thị cảnh báo
         function showAlerts(alerts) {
-            const container = document.getElementById('alertsContainer');
-            container.innerHTML = '';
-            
-            alerts.forEach(alert => {
-                const alertEl = document.createElement('div');
+            const container = document.getElementById("alertsContainer");
+            container.innerHTML = "";
+
+            alerts.forEach((alert) => {
+                const alertEl = document.createElement("div");
                 alertEl.className = `alert alert-${alert.severity}`;
                 alertEl.innerHTML = `
-                    <span class="icon">${alert.severity === 'danger' ? '🚨' : '⚠️'}</span>
+                    <span class="icon">${alert.severity === "danger" ? "🚨" : "⚠️"
+                    }</span>
                     ${alert.message}
                 `;
                 container.appendChild(alertEl);
@@ -1158,6 +1227,7 @@ HTML_TEMPLATE = """
         }
     </script>
 </body>
+
 </html>
 """
 
