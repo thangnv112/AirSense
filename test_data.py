@@ -1,101 +1,100 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-Script test gửi dữ liệu giả để test hệ thống
-Chạy song song với server1.py để xem dashboard hoạt động
+Test Data Generator for TVOC Monitoring Server
+Simulates an ESP32 device publishing sensor data to either Bedroom or Workingroom MQTT topic
+Run two instances in separate terminals for Bedroom and Workingroom
 """
 
-import paho.mqtt.client as mqtt
+import argparse
 import json
-import time
+import logging
 import random
+import time
 from datetime import datetime
 
-# Cấu hình MQTT
-MQTT_BROKER = 'localhost'
-MQTT_PORT = 1883
-MQTT_TOPIC = 'sensors/data'
+import paho.mqtt.client as mqtt
+from dotenv import load_dotenv
 
-def generate_fake_data():
-    """Tạo dữ liệu cảm biến giả"""
-    # TVOC: dao động từ 0.1-2 mg/m³ để tránh giá trị quá nhỏ
-    tvoc = random.uniform(0.1, 2)
-    print(f"TVOC thô trước khi làm tròn: {tvoc}")  # Debug
-    scenario = random.randint(1, 10)
-    if scenario == 1:  # TVOC cao
-        tvoc = random.uniform(0.5, 3)
-        print(f"TVOC cao (scenario 1): {tvoc}")  # Debug
-    tvoc_rounded = round(tvoc, 2)
-    print(f"TVOC sau khi làm tròn: {tvoc_rounded}")  # Debug
-    return {
-        'tvoc': tvoc_rounded,
-        'temperature': round(random.uniform(20, 35), 1),
-        'humidity': round(random.uniform(30, 80), 1),
-        'timestamp': datetime.now().isoformat()
-    }
+from config import MQTT_BROKER, MQTT_PORT, MQTT_TOPIC_BEDROOM, MQTT_TOPIC_WORKINGROOM
+
+# Load .env file
+load_dotenv()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# MQTT Client
+client = mqtt.Client()
 
 def on_connect(client, userdata, flags, rc):
+    """MQTT connection callback"""
     if rc == 0:
-        print("✅ Kết nối MQTT thành công")
+        logger.info("MQTT connection successful")
     else:
-        print(f"❌ Lỗi kết nối MQTT: {rc}")
+        logger.error(f"MQTT connection failed: {rc}")
+
+def generate_sensor_data():
+    """Generate random but realistic sensor data"""
+    # Realistic ranges for sensor data
+    tvoc = random.uniform(0, 1000)  # TVOC in ppb (0 to 1000)
+    temperature = random.uniform(15, 40)  # Temperature in °C (15 to 40)
+    humidity = random.uniform(20, 80)  # Humidity in % (20 to 80)
+    eco2 = random.uniform(350, 1500)  # eCO2 in ppm (350 to 1500)
+    aqi = random.randint(1, 5)  # AQI level (1 to 5)
+
+    return {
+        "tvoc": round(tvoc, 2),
+        "temperature": round(temperature, 1),
+        "humidity": round(humidity, 1),
+        "eco2": round(eco2),
+        "aqi": aqi
+    }
+
+def publish_data(topic):
+    """Publish sensor data to the specified MQTT topic"""
+    try:
+        data = generate_sensor_data()
+        client.publish(topic, json.dumps(data))
+        logger.info(f"Published to {topic}: {data}")
+    except Exception as e:
+        logger.error(f"Error publishing data to {topic}: {e}")
 
 def main():
-    print("🧪 Bắt đầu test gửi dữ liệu giả...")
-    print("📡 MQTT Broker:", MQTT_BROKER)
-    print("📊 Topic:", MQTT_TOPIC)
-    print("⏱️  Gửi dữ liệu mỗi 5 giây")
-    print("🛑 Nhấn Ctrl+C để dừng")
-    print("-" * 50)
-    
-    # Khởi tạo MQTT client
-    client = mqtt.Client()
+    """Main function to connect to MQTT and publish data"""
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Simulate ESP32 sensor data for Bedroom or Workingroom")
+    parser.add_argument("room", choices=["bedroom", "workingroom"], help="Room to simulate (bedroom or workingroom)")
+    args = parser.parse_args()
+
+    # Select MQTT topic based on room
+    topic = MQTT_TOPIC_BEDROOM if args.room == "bedroom" else MQTT_TOPIC_WORKINGROOM
+    logger.info(f"Starting test data generator for {args.room.capitalize()}...")
+    logger.info(f"MQTT Broker: {MQTT_BROKER}:{MQTT_PORT}")
+    logger.info(f"Topic: {topic}")
+
+    # Set up MQTT client
     client.on_connect = on_connect
-    
     try:
         client.connect(MQTT_BROKER, MQTT_PORT, 60)
-        client.loop_start()
-        
-        counter = 1
-        while True:
-            # Tạo dữ liệu giả
-            data = generate_fake_data()
-            
-            # Chuyển thành JSON
-            json_data = json.dumps(data)
-            print(f"JSON gửi đi: {json_data}")  # Debug
-            
-            # Gửi qua MQTT
-            result = client.publish(MQTT_TOPIC, json_data)
-            
-            if result.rc == 0:
-                print(f"📤 [{counter:03d}] Sent: TVOC={data['tvoc']}mg/m³, T={data['temperature']}°C, H={data['humidity']}%")
-                
-                # Hiển thị cảnh báo nếu có
-                alerts = []
-                if data['tvoc'] > 0.5:
-                    alerts.append(f"🚨 TVOC cao ({data['tvoc']}mg/m³)")
-                if data['temperature'] > 30:
-                    alerts.append(f"🔥 Nhiệt độ cao ({data['temperature']}°C)")
-                if data['humidity'] > 70:
-                    alerts.append(f"💧 Độ ẩm cao ({data['humidity']}%)")
-                
-                if alerts:
-                    print(f"     ⚠️  {', '.join(alerts)}")
-                    
-            else:
-                print(f"❌ [{counter:03d}] Lỗi gửi dữ liệu")
-            
-            counter += 1
-            time.sleep(5)  # Gửi mỗi 5 giây
-            
-    except KeyboardInterrupt:
-        print("\n🛑 Dừng test...")
     except Exception as e:
-        print(f"❌ Lỗi: {e}")
+        logger.error(f"Failed to connect to MQTT broker: {e}")
+        return
+
+    # Start the MQTT client loop
+    client.loop_start()
+
+    # Publish data every 5 seconds
+    try:
+        while True:
+            publish_data(topic)
+            time.sleep(5)  # Wait 5 seconds between publications
+    except KeyboardInterrupt:
+        logger.info(f"Stopping test data generator for {args.room.capitalize()}...")
     finally:
         client.loop_stop()
         client.disconnect()
-        print("👋 Đã ngắt kết nối MQTT")
 
 if __name__ == "__main__":
     main()
