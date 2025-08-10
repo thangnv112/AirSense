@@ -40,8 +40,7 @@ pip install -r requirements.txt
 ### 3. Tạo file cấu hình môi trường:
 
 ```bash
-nano .env       #Trên Linux
-notepad .env    #Trên Windows
+cp .env.example .env
 ```
 
 Cập nhật các biến trong file `.env`:
@@ -63,8 +62,10 @@ TELEGRAM_CHAT_ID=your-chat-id
 ## ⚙️ Khởi chạy hệ thống
 
 ```bash
-python3 server2.py 
-python3 test_data.py # 2 tiến trình khác nhau
+#Chạy trên 3 Terminal khác nhau
+python3 server3.py 
+python3 test_data.py bedroom #Kiểm thử bằng dữ liệu giả phòng ngủ
+python3 test_data.py workingroom #Kiểm thử bằng dữ liệu giả phòng làm việc
 ```
 
 Mở trình duyệt và truy cập:
@@ -83,8 +84,8 @@ http://localhost:5000/
 ## 🔐 Lưu ý bảo mật
 
 - Token Telegram, mật khẩu database... đều nằm trong file `.env`
-- Không commit `.env` hoặc thư mục `venv` lên Git
-- File `.gitignore` đã được cấu hình để loại trừ các mục nhạy cảm
+- Có thể không commit `.env` hoặc thư mục `venv` lên Git
+- Có thể cấu hình file `.gitignore` đã được cấu hình để loại trừ các mục nhạy cảm
 
 ## 📄 License
 
