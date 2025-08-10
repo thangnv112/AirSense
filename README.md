@@ -40,7 +40,7 @@ pip install -r requirements.txt
 ### 3. Tạo file cấu hình môi trường:
 
 ```bash
-cp .env.example .env
+nano .env
 ```
 
 Cập nhật các biến trong file `.env`:
