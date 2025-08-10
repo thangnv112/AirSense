@@ -24,9 +24,9 @@ Hệ thống giám sát chất lượng không khí theo thời gian thực sử
 ### 1. Clone dự án và tạo môi trường ảo:
 
 ```bash
-git clone https://github.com/your-username/co2-monitoring.git
-cd co2-monitoring
-python3 -m venv venv
+git clone https://github.com/your-username/project_co2.git
+cd co2_project
+python3 -m venv --copies venv
 source venv/bin/activate        # Trên Linux/macOS
 venv\Scripts\activate           # Trên Windows
 ```
@@ -40,7 +40,8 @@ pip install -r requirements.txt
 ### 3. Tạo file cấu hình môi trường:
 
 ```bash
-cp .env.example .env
+nano .env #Trên Linux
+notepad .env #Trên Windows
 ```
 
 Cập nhật các biến trong file `.env`:
