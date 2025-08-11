@@ -1270,7 +1270,7 @@ DASHBOARD_TEMPLATE = """
 
         function updateSensorDisplay(data) {
             document.getElementById("tvocValue").innerHTML = 
-                `${data.tvoc.toFixed(2)}<span class="sensor-unit">ppb</span>`;
+                `${Math.round(data.tvoc)}<span class="sensor-unit">ppb</span>`;
             document.getElementById("tempValue").innerHTML = 
                 `${data.temperature}<span class="sensor-unit">°C</span>`;
             document.getElementById("humidityValue").innerHTML = 
