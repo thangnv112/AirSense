@@ -57,13 +57,15 @@ DB_CONFIG = {
 
 # Default thresholds for TVOC
 DEFAULT_THRESHOLDS = {
-    "tvoc_max": 660,  # ppb
+    "tvoc_good": 65,    # ppb
+    "tvoc_normal": 220, # ppb
+    "tvoc_high": 660,   # ppb
     "temp_min": 18,
     "temp_max": 35,
     "humidity_min": 30,
     "humidity_max": 70,
-    "eco2_min": 400,  # ppm
-    "eco2_max": 1000,  # ppm
+    "eco2_min": 400,    # ppm
+    "eco2_max": 1000,   # ppm
 }
 
 # Global variables for data storage
@@ -329,64 +331,99 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
     alert_messages = []
     should_send_alert = False
 
-    # Check TVOC
-    if tvoc > thresholds["tvoc_max"]:
+    # Check TVOC with new thresholds
+    if tvoc > thresholds["tvoc_high"]:  # Too high
+        alert_key = "tvoc_too_high"
+        alert_severity = "danger"
+        alert_message = f"⚠️ TVOC too high: {tvoc:.2f} ppb (Critical level > {thresholds['tvoc_high']} ppb)"
+    elif tvoc > thresholds["tvoc_normal"]:  # High
         alert_key = "tvoc_high"
-        if (
-            alert_key not in last_alert_time
-            or (current_time - last_alert_time[alert_key]).seconds > 300
-        ):  # 5 minutes
-            should_send_alert = True
-            last_alert_time[alert_key] = current_time
-            alert_messages.append(
-                f"⚠️ TVOC too high: {tvoc:.2f} ppb "
-                f"(Threshold: {thresholds['tvoc_max']:.2f} ppb)"
-            )
-            alerts.append(
-                {
-                    "type": "tvoc_high",
-                    "message": f"High TVOC: {tvoc:.2f} ppb",
-                    "severity": "danger",
-                }
-            )
+        alert_severity = "warning"
+        alert_message = f"⚡ TVOC high: {tvoc:.2f} ppb"
+    elif tvoc > thresholds["tvoc_good"]:  # Normal
+        alert_key = "tvoc_normal"
+        alert_severity = "info"
+        alert_message = None
+    else:  # Good
+        alert_key = "tvoc_good"
+        alert_severity = "success"
+        alert_message = None
 
-    # Check temperature
-    if temperature < thresholds["temp_min"] or temperature > thresholds["temp_max"]:
-        alert_key = "temp_abnormal"
-        if (
-            alert_key not in last_alert_time
-            or (current_time - last_alert_time[alert_key]).seconds > 600
-        ):  # 10 minutes
-            should_send_alert = True
-            last_alert_time[alert_key] = current_time
-            if temperature < thresholds["temp_min"]:
-                alert_messages.append(
-                    f"🥶 Temperature too low: {temperature}°C "
-                    f"(Minimum: {thresholds['temp_min']}°C)"
-                )
-            else:
-                alert_messages.append(
-                    f"🥵 Temperature too high: {temperature}°C "
-                    f"(Maximum: {thresholds['temp_max']}°C)"
-                )
-            alerts.append(
-                {
-                    "type": "temp_abnormal",
-                    "message": f"Abnormal temperature: {temperature}°C",
-                    "severity": "warning",
-                }
-            )
+    if alert_message and (
+        alert_key not in last_alert_time
+        or (current_time - last_alert_time[alert_key]).seconds > 300
+    ):  # 5 minutes
+        should_send_alert = True
+        last_alert_time[alert_key] = current_time
+        alert_messages.append(alert_message)
+        alerts.append({
+            "type": alert_key,
+            "message": f"TVOC Level: {tvoc:.2f} ppb",
+            "severity": alert_severity,
+            "level": "too_high" if tvoc > thresholds["tvoc_high"] else "high" if tvoc > thresholds["tvoc_normal"] else "normal" if tvoc > thresholds["tvoc_good"] else "good"
+        })
 
-    # Check humidity
-    if humidity < thresholds["humidity_min"] or humidity > thresholds["humidity_max"]:
-        alert_key = "humidity_abnormal"
-        if (
-            alert_key not in last_alert_time
-            or (current_time - last_alert_time[alert_key]).seconds > 600
-        ):  # 10 minutes
-            should_send_alert = True
-            last_alert_time[alert_key] = current_time
-            if humidity < thresholds["humidity_min"]:
+    # Check temperature with new thresholds
+    if temperature > thresholds["temp_max"]:  # High
+        temp_status = "high"
+        alert_key = "temp_high"
+        alert_severity = "warning"
+        alert_message = f"🥵 Temperature high: {temperature}°C (Maximum: {thresholds['temp_max']}°C)"
+    elif temperature < thresholds["temp_min"]:  # Low
+        temp_status = "low"
+        alert_key = "temp_low"
+        alert_severity = "warning"
+        alert_message = f"🥶 Temperature low: {temperature}°C (Minimum: {thresholds['temp_min']}°C)"
+    else:  # Normal
+        temp_status = "normal"
+        alert_key = "temp_normal"
+        alert_severity = "success"
+        alert_message = None
+
+    if alert_message and (
+        alert_key not in last_alert_time
+        or (current_time - last_alert_time[alert_key]).seconds > 600
+    ):  # 10 minutes
+        should_send_alert = True
+        last_alert_time[alert_key] = current_time
+        alert_messages.append(alert_message)
+        alerts.append({
+            "type": alert_key,
+            "message": f"Temperature: {temperature}°C",
+            "severity": alert_severity,
+            "level": temp_status
+        })
+
+    # Check humidity with new thresholds
+    if humidity > thresholds["humidity_max"]:  # High
+        humidity_status = "high"
+        alert_key = "humidity_high"
+        alert_severity = "warning"
+        alert_message = f"💧 Humidity high: {humidity}% (Maximum: {thresholds['humidity_max']}%)"
+    elif humidity < thresholds["humidity_min"]:  # Low
+        humidity_status = "low"
+        alert_key = "humidity_low"
+        alert_severity = "warning"
+        alert_message = f"🏜️ Humidity low: {humidity}% (Minimum: {thresholds['humidity_min']}%)"
+    else:  # Normal
+        humidity_status = "normal"
+        alert_key = "humidity_normal"
+        alert_severity = "success"
+        alert_message = None
+
+    if alert_message and (
+        alert_key not in last_alert_time
+        or (current_time - last_alert_time[alert_key]).seconds > 600
+    ):  # 10 minutes
+        should_send_alert = True
+        last_alert_time[alert_key] = current_time
+        alert_messages.append(alert_message)
+        alerts.append({
+            "type": alert_key,
+            "message": f"Humidity: {humidity}%",
+            "severity": alert_severity,
+            "level": humidity_status
+        })
                 alert_messages.append(
                     f"🏜️ Humidity too low: {humidity}% "
                     f"(Minimum: {thresholds['humidity_min']}%)"
