@@ -55,18 +55,19 @@ DB_CONFIG = {
     "database": DB_NAME,
 }
 
-# Default thresholds for TVOC and eCO2
+# Default thresholds for TVOC (5 mức)
 DEFAULT_THRESHOLDS = {
-    "tvoc_good": 65,  # ppb
-    "tvoc_normal": 220,  # ppb
-    "tvoc_high": 660,  # ppb
+    "tvoc_excellent": 65,  # 0-65
+    "tvoc_good": 220,  # 65-220
+    "tvoc_moderate": 650,  # 220-650
+    "tvoc_poor": 2200,  # 650-2200
+    "tvoc_unhealthy": 5500,  # 2200-5500
     "temp_min": 18,
     "temp_max": 35,
     "humidity_min": 30,
     "humidity_max": 70,
-    "eco2_min": 400,  # ppm (low threshold)
-    "eco2_normal": 1000,  # ppm (normal threshold)
-    "eco2_high": 2000,  # ppm (high threshold)
+    "eco2_min": 400,  # ppm
+    "eco2_max": 1000,  # ppm
 }
 
 # Global variables for data storage
@@ -338,28 +339,36 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
     alert_messages = []
     should_send_alert = False
 
-    # Check TVOC with new thresholds
-    if tvoc > thresholds["tvoc_high"]:  # Too high
-        alert_key = "tvoc_too_high"
-        alert_severity = "danger"
-        alert_message = f"⚠️ TVOC too high: {tvoc:.2f} ppb (Critical level > {thresholds['tvoc_high']} ppb)"
-    elif tvoc > thresholds["tvoc_normal"]:  # High
-        alert_key = "tvoc_high"
-        alert_severity = "warning"
-        alert_message = f"⚡ TVOC high: {tvoc:.2f} ppb"
-    elif tvoc > thresholds["tvoc_good"]:  # Normal
-        alert_key = "tvoc_normal"
-        alert_severity = "info"
-        alert_message = None
-    else:  # Good
-        alert_key = "tvoc_good"
+    # TVOC 5 mức chỉ dùng cho cảnh báo, không thay đổi AQI
+    if tvoc < thresholds["tvoc_excellent"]:
+        alert_key = "tvoc_excellent"
         alert_severity = "success"
         alert_message = None
+    elif tvoc < thresholds["tvoc_good"]:
+        alert_key = "tvoc_good"
+        alert_severity = "info"
+        alert_message = None
+    elif tvoc < thresholds["tvoc_moderate"]:
+        alert_key = "tvoc_moderate"
+        alert_severity = "warning"
+        alert_message = f"⚡ TVOC moderate: {tvoc:.2f} ppb"
+    elif tvoc < thresholds["tvoc_poor"]:
+        alert_key = "tvoc_poor"
+        alert_severity = "danger"
+        alert_message = f"⚠️ TVOC poor: {tvoc:.2f} ppb"
+    elif tvoc < thresholds["tvoc_unhealthy"]:
+        alert_key = "tvoc_unhealthy"
+        alert_severity = "danger"
+        alert_message = f"🚨 TVOC unhealthy: {tvoc:.2f} ppb"
+    else:
+        alert_key = "tvoc_unhealthy"
+        alert_severity = "danger"
+        alert_message = f"🚨 TVOC unhealthy: {tvoc:.2f} ppb"
 
     if alert_message and (
         alert_key not in last_alert_time
         or (current_time - last_alert_time[alert_key]).seconds > 300
-    ):  # 5 minutes
+    ):
         should_send_alert = True
         last_alert_time[alert_key] = current_time
         alert_messages.append(alert_message)
@@ -368,37 +377,30 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
                 "type": alert_key,
                 "message": f"TVOC Level: {tvoc:.2f} ppb",
                 "severity": alert_severity,
-                "level": (
-                    "too_high"
-                    if tvoc > thresholds["tvoc_high"]
-                    else (
-                        "high"
-                        if tvoc > thresholds["tvoc_normal"]
-                        else "normal" if tvoc > thresholds["tvoc_good"] else "good"
-                    )
-                ),
+                "level": alert_key.replace("tvoc_", ""),
             }
         )
 
-    # Check temperature with new thresholds
+    # Check temperature with 3 levels: Low, Normal, High
     if temperature > thresholds["temp_max"]:  # High
         temp_status = "high"
         alert_key = "temp_high"
-        alert_severity = "warning"
-        alert_message = f"🥵 Temperature high: {temperature}°C (Maximum: {thresholds['temp_max']}°C)"
+        alert_severity = "high"
+        alert_message = (
+            f"🥵 Temperature HIGH: {temperature}°C (Above {thresholds['temp_max']}°C)"
+        )
     elif temperature < thresholds["temp_min"]:  # Low
         temp_status = "low"
         alert_key = "temp_low"
-        alert_severity = "warning"
+        alert_severity = "low"
         alert_message = (
-            f"🥶 Temperature low: {temperature}°C (Minimum: {thresholds['temp_min']}°C)"
+            f"🥶 Temperature LOW: {temperature}°C (Below {thresholds['temp_min']}°C)"
         )
     else:  # Normal
         temp_status = "normal"
         alert_key = "temp_normal"
         alert_severity = "success"
         alert_message = None
-<<<<<<< HEAD
 
     if alert_message and (
         alert_key not in last_alert_time
@@ -416,20 +418,20 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
             }
         )
 
-    # Check humidity with new thresholds
+    # Check humidity with 3 levels: Low, Normal, High
     if humidity > thresholds["humidity_max"]:  # High
         humidity_status = "high"
         alert_key = "humidity_high"
-        alert_severity = "warning"
+        alert_severity = "high"
         alert_message = (
-            f"💧 Humidity high: {humidity}% (Maximum: {thresholds['humidity_max']}%)"
+            f"💧 Humidity HIGH: {humidity}% (Above {thresholds['humidity_max']}%)"
         )
     elif humidity < thresholds["humidity_min"]:  # Low
         humidity_status = "low"
         alert_key = "humidity_low"
-        alert_severity = "warning"
+        alert_severity = "low"
         alert_message = (
-            f"🏜️ Humidity low: {humidity}% (Minimum: {thresholds['humidity_min']}%)"
+            f"🏜️ Humidity LOW: {humidity}% (Below {thresholds['humidity_min']}%)"
         )
     else:  # Normal
         humidity_status = "normal"
@@ -452,97 +454,6 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
                 "level": humidity_status,
             }
         )
-        alert_messages.append(
-            f"🏜️ Humidity too low: {humidity}% "
-            f"(Minimum: {thresholds['humidity_min']}%)"
-        )
-    else:
-        alert_messages.append(
-            f"💧 Humidity too high: {humidity}% "
-            f"(Maximum: {thresholds['humidity_max']}%)"
-        )
-    alerts.append(
-        {
-            "type": "humidity_abnormal",
-            "message": f"Abnormal humidity: {humidity}%",
-            "severity": "warning",
-        }
-    )
-
-    # Check eCO2
-    if eco2 < thresholds["eco2_min"] or eco2 > thresholds["eco2_max"]:
-        alert_key = "eco2_abnormal"
-        if (
-            alert_key not in last_alert_time
-            or (current_time - last_alert_time[alert_key]).seconds > 600
-        ):  # 10 minutes
-            should_send_alert = True
-            last_alert_time[alert_key] = current_time
-            if eco2 < thresholds["eco2_min"]:
-                alert_messages.append(
-                    f"🌿 CO2 level too low: {eco2} ppm "
-                    f"(Minimum: {thresholds['eco2_min']} ppm)"
-                )
-            else:
-                alert_messages.append(
-                    f"⚠️ CO2 level too high: {eco2} ppm "
-                    f"(Maximum: {thresholds['eco2_max']} ppm)"
-                )
-            alerts.append(
-                {
-                    "type": "eco2_abnormal",
-                    "message": f"Abnormal CO2 level: {eco2} ppm",
-                    "severity": (
-                        "warning" if eco2 < thresholds["eco2_min"] else "danger"
-                    ),
-                }
-            )
-=======
-
-    if alert_message and (
-        alert_key not in last_alert_time
-        or (current_time - last_alert_time[alert_key]).seconds > 600
-    ):  # 10 minutes
-        should_send_alert = True
-        last_alert_time[alert_key] = current_time
-        alert_messages.append(alert_message)
-        alerts.append(
-            {
-                "type": alert_key,
-                "message": f"Temperature: {temperature}°C",
-                "severity": alert_severity,
-                "level": temp_status,
-            }
-        )
-
-    # Check humidity with new thresholds
-    if humidity > thresholds["humidity_max"]:  # High
-        humidity_status = "high"
-        alert_key = "humidity_high"
-        alert_severity = "warning"
-        alert_message = (
-            f"💧 Humidity high: {humidity}% (Maximum: {thresholds['humidity_max']}%)"
-        )
-    elif humidity < thresholds["humidity_min"]:  # Low
-        humidity_status = "low"
-        alert_key = "humidity_low"
-        alert_severity = "warning"
-        alert_message = (
-            f"🏜️ Humidity low: {humidity}% (Minimum: {thresholds['humidity_min']}%)"
-        )
-    else:  # Normal
-        humidity_status = "normal"
-        alert_key = "humidity_normal"
-        alert_severity = "success"
-        alert_message = None
-
-    if alert_message and (
-        alert_key not in last_alert_time
-        or (current_time - last_alert_time[alert_key]).seconds > 600
-    ):  # 10 minutes
-        should_send_alert = True
-        last_alert_time[alert_key] = current_time
-        alert_messages.append(alert_message)
         alerts.append(
             {
                 "type": alert_key,
@@ -551,46 +462,27 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
                 "level": humidity_status,
             }
         )
-        alert_messages.append(
-            f"🏜️ Humidity too low: {humidity}% "
-            f"(Minimum: {thresholds['humidity_min']}%)"
-        )
-    else:
-        alert_messages.append(
-            f"💧 Humidity too high: {humidity}% "
-            f"(Maximum: {thresholds['humidity_max']}%)"
-        )
-    alerts.append(
-        {
-            "type": "humidity_abnormal",
-            "message": f"Abnormal humidity: {humidity}%",
-            "severity": "warning",
-        }
-    )
 
-    # Check eCO2 with new thresholds
-    if eco2 > thresholds["eco2_high"]:  # Too high (> 2000 ppm)
-        eco2_status = "too_high"
-        alert_key = "eco2_too_high"
-        alert_severity = "danger"
-        alert_message = f"🚨 CO2 level too high: {eco2} ppm (Critical level > {thresholds['eco2_high']} ppm)"
-    elif eco2 > thresholds["eco2_normal"]:  # High (1000-2000 ppm)
+    # Check eCO2 with 3 levels: Low, Normal, High
+    if eco2 > thresholds["eco2_max"]:  # High
         eco2_status = "high"
         alert_key = "eco2_high"
-        alert_severity = "warning"
-        alert_message = f"⚠️ CO2 level high: {eco2} ppm"
-    elif eco2 >= thresholds["eco2_min"]:  # Normal (400-1000 ppm)
+        alert_severity = "high"
+        alert_message = (
+            f"⚠️ CO2 level HIGH: {eco2} ppm (Above {thresholds['eco2_max']} ppm)"
+        )
+    elif eco2 < thresholds["eco2_min"]:  # Low
+        eco2_status = "low"
+        alert_key = "eco2_low"
+        alert_severity = "low"
+        alert_message = (
+            f"🌿 CO2 level LOW: {eco2} ppm (Below {thresholds['eco2_min']} ppm)"
+        )
+    else:  # Normal
         eco2_status = "normal"
         alert_key = "eco2_normal"
         alert_severity = "success"
         alert_message = None
-    else:  # Low (< 400 ppm)
-        eco2_status = "low"
-        alert_key = "eco2_low"
-        alert_severity = "warning"
-        alert_message = (
-            f"🌿 CO2 level too low: {eco2} ppm (Minimum: {thresholds['eco2_min']} ppm)"
-        )
 
     if alert_message and (
         alert_key not in last_alert_time
@@ -602,14 +494,13 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
         alerts.append(
             {
                 "type": alert_key,
-                "message": f"CO2 Level: {eco2} ppm",
+                "message": f"CO2 level: {eco2} ppm",
                 "severity": alert_severity,
                 "level": eco2_status,
             }
         )
->>>>>>> 2b20299db8633deb2585ff935350567929384196
 
-    # Get AQI description
+    # Get AQI description (cập nhật lại cho đúng)
     aqi_descriptions = {
         1: "Excellent",
         2: "Good",
@@ -840,7 +731,7 @@ DASHBOARD_TEMPLATE = """
             transform: scale(1.03);
             transition: transform 0.3s ease;
         }
-        .aqi-moderate {
+        .aqi-morderate {
             background: linear-gradient(45deg, #FFC107, #FFB300) !important;
             color: white !important;
             transform: scale(1);
@@ -999,19 +890,7 @@ DASHBOARD_TEMPLATE = """
             display: inline-block;
             margin-top: 10px;
         }
-        .status-normal {
-            background: linear-gradient(45deg, #4caf50, #45a049);
-            color: white;
-        }
-        .status-warning {
-            background: linear-gradient(45deg, #ff9800, #f57c00);
-            color: white;
-        }
-        .status-danger {
-            background: linear-gradient(45deg, #f44336, #d32f2f);
-            color: white;
-            animation: pulse 2s infinite;
-        }
+        /* TVOC Status Classes */
         .status-excellent {
             background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
@@ -1027,9 +906,22 @@ DASHBOARD_TEMPLATE = """
         .status-poor {
             background: linear-gradient(45deg, #FF9800, #F57C00);
             color: white;
-            animation: pulse 2s infinite;
         }
         .status-unhealthy {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        /* Temperature, Humidity, eCO2 Status Classes */
+        .status-normal {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+        .status-low {
+            background: linear-gradient(45deg, #3F51B5, #303F9F);
+            color: white;
+        }
+        .status-high {
             background: linear-gradient(45deg, #f44336, #d32f2f);
             color: white;
             animation: pulse 2s infinite;
@@ -1191,7 +1083,7 @@ DASHBOARD_TEMPLATE = """
                     0<span class="sensor-unit">ppb</span>
                 </div>
                 <div class="sensor-status status-normal" id="tvocStatus">
-                    Normal
+                    TVOC Level: Excellent
                 </div>
             </div>
             <!-- Temperature Card -->
@@ -1382,31 +1274,40 @@ DASHBOARD_TEMPLATE = """
             document.getElementById("tempValue").innerHTML = 
                 `${data.temperature}<span class="sensor-unit">°C</span>`;
             document.getElementById("humidityValue").innerHTML = 
-                `${data.humidity}<span class="sensor-unit">%</span>`;
+                `${data.humidity}<span class="sensor-unit">%"</span>`;
             document.getElementById("eco2Value").innerHTML = 
                 `${data.eco2}<span class="sensor-unit">ppm</span>`;
-            // Cập nhật mức TVOC đúng 5 mức
+            // Thay đổi log mức TVOC ngay trên status
+            // Lấy các ngưỡng TVOC từ form
+            const tvocThresholds = {
+                excellent: 65,   // 0-65: Excellent
+                good: 220,      // 65-220: Good
+                moderate: 650,  // 220-650: Moderate
+                poor: 2200     // 650-2200: Poor
+                               // >2200: Unhealthy
+            };
+
             let tvocLevel = "";
-            let tvocClass = "status-normal";
-            if (data.tvoc >= 0 && data.tvoc < 65) {
+            let statusClass = "";
+            if (data.tvoc < tvocThresholds.excellent) {
                 tvocLevel = "Excellent";
-                tvocClass = "status-excellent";
-            } else if (data.tvoc >= 65 && data.tvoc < 220) {
+                statusClass = "status-excellent";
+            } else if (data.tvoc < tvocThresholds.good) {
                 tvocLevel = "Good";
-                tvocClass = "status-good";
-            } else if (data.tvoc >= 220 && data.tvoc < 650) {
+                statusClass = "status-good";
+            } else if (data.tvoc < tvocThresholds.moderate) {
                 tvocLevel = "Moderate";
-                tvocClass = "status-moderate";
-            } else if (data.tvoc >= 650 && data.tvoc < 2200) {
+                statusClass = "status-moderate";
+            } else if (data.tvoc < tvocThresholds.poor) {
                 tvocLevel = "Poor";
-                tvocClass = "status-poor";
-            } else if (data.tvoc >= 2200) {
+                statusClass = "status-poor";
+            } else {
                 tvocLevel = "Unhealthy";
-                tvocClass = "status-unhealthy";
+                statusClass = "status-unhealthy";
             }
             const tvocStatusEl = document.getElementById("tvocStatus");
+            tvocStatusEl.className = `sensor-status ${statusClass}`;
             tvocStatusEl.textContent = `${tvocLevel}`;
-            tvocStatusEl.className = `sensor-status ${tvocClass}`;
             updateSensorStatus("temp", data.temperature);
             updateSensorStatus("humidity", data.humidity);
             updateSensorStatus("eco2", data.eco2);
@@ -1434,8 +1335,8 @@ DASHBOARD_TEMPLATE = """
                     icon = '✨';
                     break;
                 case 3:
-                    className = 'aqi-moderate';
-                    text = 'Moderate';
+                    className = 'aqi-morderate';
+                    text = 'Morderate';
                     icon = '⚡';
                     break;
                 case 4:
@@ -1458,24 +1359,43 @@ DASHBOARD_TEMPLATE = """
         }
 
         function updateSensorStatus(sensorType, value) {
+            // Bỏ qua TVOC vì đã được xử lý riêng
+            if (sensorType === "tvoc") return;
+
             const statusEl = document.getElementById(
                 sensorType === "temp" ? "tempStatus" : sensorType + "Status"
             );
-            let status = "status-normal";
-            let text = "Normal";
-            if (sensorType === "tvoc" && value > 660) {
-                status = "status-danger";
-                text = "Too High";
-            } else if (sensorType === "temp" && (value < 18 || value > 35)) {
-                status = "status-warning";
-                text = "Abnormal";
-            } else if (sensorType === "humidity" && (value < 30 || value > 70)) {
-                status = "status-warning";
-                text = "Abnormal";
-            } else if (sensorType === "eco2" && (value < 400 || value > 1000)) {
-                status = "status-warning";
-                text = "Abnormal";
+            
+            // Lấy các ngưỡng từ form
+            const thresholds = {
+                temp: { 
+                    min: parseFloat(document.getElementById("tempMin").value), 
+                    max: parseFloat(document.getElementById("tempMax").value)
+                },
+                humidity: { 
+                    min: parseFloat(document.getElementById("humidityMin").value), 
+                    max: parseFloat(document.getElementById("humidityMax").value)
+                },
+                eco2: { 
+                    min: parseFloat(document.getElementById("eco2Min").value), 
+                    max: parseFloat(document.getElementById("eco2Max").value)
+                }
+            };
+
+            const th = thresholds[sensorType];
+            let status, text;
+
+            if (value < th.min) {
+                status = "status-low";
+                text = "LOW";
+            } else if (value > th.max) {
+                status = "status-high";
+                text = "HIGH";
+            } else {
+                status = "status-normal";
+                text = "NORMAL";
             }
+
             statusEl.className = `sensor-status ${status}`;
             statusEl.textContent = text;
         }
