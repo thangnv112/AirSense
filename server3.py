@@ -55,13 +55,11 @@ DB_CONFIG = {
     "database": DB_NAME,
 }
 
-# Default thresholds for TVOC (5 mức)
+# Default thresholds for TVOC
 DEFAULT_THRESHOLDS = {
-    "tvoc_excellent": 65,  # 0-65
-    "tvoc_good": 220,  # 65-220
-    "tvoc_moderate": 650,  # 220-650
-    "tvoc_poor": 2200,  # 650-2200
-    "tvoc_unhealthy": 5500,  # 2200-5500
+    "tvoc_good": 65,  # ppb
+    "tvoc_normal": 220,  # ppb
+    "tvoc_high": 660,  # ppb
     "temp_min": 18,
     "temp_max": 35,
     "humidity_min": 30,
@@ -339,36 +337,28 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
     alert_messages = []
     should_send_alert = False
 
-    # TVOC 5 mức chỉ dùng cho cảnh báo, không thay đổi AQI
-    if tvoc < thresholds["tvoc_excellent"]:
-        alert_key = "tvoc_excellent"
-        alert_severity = "success"
-        alert_message = None
-    elif tvoc < thresholds["tvoc_good"]:
-        alert_key = "tvoc_good"
+    # Check TVOC with new thresholds
+    if tvoc > thresholds["tvoc_high"]:  # Too high
+        alert_key = "tvoc_too_high"
+        alert_severity = "danger"
+        alert_message = f"⚠️ TVOC too high: {tvoc:.2f} ppb (Critical level > {thresholds['tvoc_high']} ppb)"
+    elif tvoc > thresholds["tvoc_normal"]:  # High
+        alert_key = "tvoc_high"
+        alert_severity = "warning"
+        alert_message = f"⚡ TVOC high: {tvoc:.2f} ppb"
+    elif tvoc > thresholds["tvoc_good"]:  # Normal
+        alert_key = "tvoc_normal"
         alert_severity = "info"
         alert_message = None
-    elif tvoc < thresholds["tvoc_moderate"]:
-        alert_key = "tvoc_moderate"
-        alert_severity = "warning"
-        alert_message = f"⚡ TVOC moderate: {tvoc:.2f} ppb"
-    elif tvoc < thresholds["tvoc_poor"]:
-        alert_key = "tvoc_poor"
-        alert_severity = "danger"
-        alert_message = f"⚠️ TVOC poor: {tvoc:.2f} ppb"
-    elif tvoc < thresholds["tvoc_unhealthy"]:
-        alert_key = "tvoc_unhealthy"
-        alert_severity = "danger"
-        alert_message = f"🚨 TVOC unhealthy: {tvoc:.2f} ppb"
-    else:
-        alert_key = "tvoc_unhealthy"
-        alert_severity = "danger"
-        alert_message = f"🚨 TVOC unhealthy: {tvoc:.2f} ppb"
+    else:  # Good
+        alert_key = "tvoc_good"
+        alert_severity = "success"
+        alert_message = None
 
     if alert_message and (
         alert_key not in last_alert_time
         or (current_time - last_alert_time[alert_key]).seconds > 300
-    ):
+    ):  # 5 minutes
         should_send_alert = True
         last_alert_time[alert_key] = current_time
         alert_messages.append(alert_message)
@@ -377,7 +367,15 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
                 "type": alert_key,
                 "message": f"TVOC Level: {tvoc:.2f} ppb",
                 "severity": alert_severity,
-                "level": alert_key.replace("tvoc_", ""),
+                "level": (
+                    "too_high"
+                    if tvoc > thresholds["tvoc_high"]
+                    else (
+                        "high"
+                        if tvoc > thresholds["tvoc_normal"]
+                        else "normal" if tvoc > thresholds["tvoc_good"] else "good"
+                    )
+                ),
             }
         )
 
@@ -498,11 +496,11 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
                 }
             )
 
-    # Get AQI description (cập nhật lại cho đúng)
+    # Get AQI description
     aqi_descriptions = {
         1: "Excellent",
         2: "Good",
-        3: "Moderate",
+        3: "Morderate",
         4: "Poor",
         5: "Unhealthy",
     }
@@ -901,6 +899,28 @@ DASHBOARD_TEMPLATE = """
             color: white;
             animation: pulse 2s infinite;
         }
+        .status-excellent {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+        .status-good {
+            background: linear-gradient(45deg, #8BC34A, #7CB342);
+            color: white;
+        }
+        .status-moderate {
+            background: linear-gradient(45deg, #FFC107, #FFB300);
+            color: white;
+        }
+        .status-poor {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        .status-unhealthy {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+            animation: pulse 2s infinite;
+        }
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -1252,7 +1272,28 @@ DASHBOARD_TEMPLATE = """
                 `${data.humidity}<span class="sensor-unit">%</span>`;
             document.getElementById("eco2Value").innerHTML = 
                 `${data.eco2}<span class="sensor-unit">ppm</span>`;
-            updateSensorStatus("tvoc", data.tvoc);
+            // Cập nhật mức TVOC đúng 5 mức
+            let tvocLevel = "";
+            let tvocClass = "status-normal";
+            if (data.tvoc >= 0 && data.tvoc < 65) {
+                tvocLevel = "Excellent";
+                tvocClass = "status-excellent";
+            } else if (data.tvoc >= 65 && data.tvoc < 220) {
+                tvocLevel = "Good";
+                tvocClass = "status-good";
+            } else if (data.tvoc >= 220 && data.tvoc < 650) {
+                tvocLevel = "Moderate";
+                tvocClass = "status-moderate";
+            } else if (data.tvoc >= 650 && data.tvoc < 2200) {
+                tvocLevel = "Poor";
+                tvocClass = "status-poor";
+            } else if (data.tvoc >= 2200) {
+                tvocLevel = "Unhealthy";
+                tvocClass = "status-unhealthy";
+            }
+            const tvocStatusEl = document.getElementById("tvocStatus");
+            tvocStatusEl.textContent = `${tvocLevel}`;
+            tvocStatusEl.className = `sensor-status ${tvocClass}`;
             updateSensorStatus("temp", data.temperature);
             updateSensorStatus("humidity", data.humidity);
             updateSensorStatus("eco2", data.eco2);
