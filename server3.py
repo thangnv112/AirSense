@@ -55,9 +55,13 @@ DB_CONFIG = {
     "database": DB_NAME,
 }
 
-# Default thresholds for TVOC
+# Default thresholds for TVOC (5 mức)
 DEFAULT_THRESHOLDS = {
-    "tvoc_max": 660,  # ppb
+    "tvoc_excellent": 65,  # 0-65
+    "tvoc_good": 220,  # 65-220
+    "tvoc_moderate": 650,  # 220-650
+    "tvoc_poor": 2200,  # 650-2200
+    "tvoc_unhealthy": 5500,  # 2200-5500
     "temp_min": 18,
     "temp_max": 35,
     "humidity_min": 30,
@@ -89,6 +93,7 @@ thresholds_bedroom = DEFAULT_THRESHOLDS.copy()
 thresholds_workingroom = DEFAULT_THRESHOLDS.copy()
 last_alert_time_bedroom = {}
 last_alert_time_workingroom = {}
+
 
 class DatabaseManager:
     """Database manager class for handling MariaDB operations"""
@@ -300,8 +305,10 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Error logging alert for {room}: {e}")
 
+
 # Initialize Database Manager
 db = DatabaseManager()
+
 
 def send_telegram_alert(room, message):
     """Send alert via Telegram"""
@@ -320,89 +327,147 @@ def send_telegram_alert(room, message):
     except Exception as e:
         logger.error(f"Telegram error for {room}: {e}")
 
+
 def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
     """Check thresholds and send alerts for TVOC, temperature, humidity and eCO2"""
     thresholds = thresholds_bedroom if room == "bedroom" else thresholds_workingroom
-    last_alert_time = last_alert_time_bedroom if room == "bedroom" else last_alert_time_workingroom
+    last_alert_time = (
+        last_alert_time_bedroom if room == "bedroom" else last_alert_time_workingroom
+    )
     current_time = datetime.now()
     alerts = []
     alert_messages = []
     should_send_alert = False
 
-    # Check TVOC
-    if tvoc > thresholds["tvoc_max"]:
-        alert_key = "tvoc_high"
-        if (
-            alert_key not in last_alert_time
-            or (current_time - last_alert_time[alert_key]).seconds > 300
-        ):  # 5 minutes
-            should_send_alert = True
-            last_alert_time[alert_key] = current_time
-            alert_messages.append(
-                f"⚠️ TVOC too high: {tvoc:.2f} ppb "
-                f"(Threshold: {thresholds['tvoc_max']:.2f} ppb)"
-            )
-            alerts.append(
-                {
-                    "type": "tvoc_high",
-                    "message": f"High TVOC: {tvoc:.2f} ppb",
-                    "severity": "danger",
-                }
-            )
+    # TVOC 5 mức chỉ dùng cho cảnh báo, không thay đổi AQI
+    if tvoc < thresholds["tvoc_excellent"]:
+        alert_key = "tvoc_excellent"
+        alert_severity = "success"
+        alert_message = None
+    elif tvoc < thresholds["tvoc_good"]:
+        alert_key = "tvoc_good"
+        alert_severity = "info"
+        alert_message = None
+    elif tvoc < thresholds["tvoc_moderate"]:
+        alert_key = "tvoc_moderate"
+        alert_severity = "warning"
+        alert_message = f"⚡ TVOC moderate: {tvoc:.2f} ppb"
+    elif tvoc < thresholds["tvoc_poor"]:
+        alert_key = "tvoc_poor"
+        alert_severity = "danger"
+        alert_message = f"⚠️ TVOC poor: {tvoc:.2f} ppb"
+    elif tvoc < thresholds["tvoc_unhealthy"]:
+        alert_key = "tvoc_unhealthy"
+        alert_severity = "danger"
+        alert_message = f"🚨 TVOC unhealthy: {tvoc:.2f} ppb"
+    else:
+        alert_key = "tvoc_unhealthy"
+        alert_severity = "danger"
+        alert_message = f"🚨 TVOC unhealthy: {tvoc:.2f} ppb"
 
-    # Check temperature
-    if temperature < thresholds["temp_min"] or temperature > thresholds["temp_max"]:
-        alert_key = "temp_abnormal"
-        if (
-            alert_key not in last_alert_time
-            or (current_time - last_alert_time[alert_key]).seconds > 600
-        ):  # 10 minutes
-            should_send_alert = True
-            last_alert_time[alert_key] = current_time
-            if temperature < thresholds["temp_min"]:
-                alert_messages.append(
-                    f"🥶 Temperature too low: {temperature}°C "
-                    f"(Minimum: {thresholds['temp_min']}°C)"
-                )
-            else:
-                alert_messages.append(
-                    f"🥵 Temperature too high: {temperature}°C "
-                    f"(Maximum: {thresholds['temp_max']}°C)"
-                )
-            alerts.append(
-                {
-                    "type": "temp_abnormal",
-                    "message": f"Abnormal temperature: {temperature}°C",
-                    "severity": "warning",
-                }
-            )
+    if alert_message and (
+        alert_key not in last_alert_time
+        or (current_time - last_alert_time[alert_key]).seconds > 300
+    ):
+        should_send_alert = True
+        last_alert_time[alert_key] = current_time
+        alert_messages.append(alert_message)
+        alerts.append(
+            {
+                "type": alert_key,
+                "message": f"TVOC Level: {tvoc:.2f} ppb",
+                "severity": alert_severity,
+                "level": alert_key.replace("tvoc_", ""),
+            }
+        )
 
-    # Check humidity
-    if humidity < thresholds["humidity_min"] or humidity > thresholds["humidity_max"]:
-        alert_key = "humidity_abnormal"
-        if (
-            alert_key not in last_alert_time
-            or (current_time - last_alert_time[alert_key]).seconds > 600
-        ):  # 10 minutes
-            should_send_alert = True
-            last_alert_time[alert_key] = current_time
-            if humidity < thresholds["humidity_min"]:
-                alert_messages.append(
-                    f"🏜️ Humidity too low: {humidity}% "
-                    f"(Minimum: {thresholds['humidity_min']}%)"
-                )
-            else:
-                alert_messages.append(
-                    f"💧 Humidity too high: {humidity}% "
-                    f"(Maximum: {thresholds['humidity_max']}%)"
-                )
-            alerts.append(
-                {
-                    "type": "humidity_abnormal",
-                    "message": f"Abnormal humidity: {humidity}%",
-                    "severity": "warning",
-                }
-            )
+    # Check temperature with new thresholds
+    if temperature > thresholds["temp_max"]:  # High
+        temp_status = "high"
+        alert_key = "temp_high"
+        alert_severity = "warning"
+        alert_message = f"🥵 Temperature high: {temperature}°C (Maximum: {thresholds['temp_max']}°C)"
+    elif temperature < thresholds["temp_min"]:  # Low
+        temp_status = "low"
+        alert_key = "temp_low"
+        alert_severity = "warning"
+        alert_message = (
+            f"🥶 Temperature low: {temperature}°C (Minimum: {thresholds['temp_min']}°C)"
+        )
+    else:  # Normal
+        temp_status = "normal"
+        alert_key = "temp_normal"
+        alert_severity = "success"
+        alert_message = None
+
+    if alert_message and (
+        alert_key not in last_alert_time
+        or (current_time - last_alert_time[alert_key]).seconds > 600
+    ):  # 10 minutes
+        should_send_alert = True
+        last_alert_time[alert_key] = current_time
+        alert_messages.append(alert_message)
+        alerts.append(
+            {
+                "type": alert_key,
+                "message": f"Temperature: {temperature}°C",
+                "severity": alert_severity,
+                "level": temp_status,
+            }
+        )
+
+    # Check humidity with new thresholds
+    if humidity > thresholds["humidity_max"]:  # High
+        humidity_status = "high"
+        alert_key = "humidity_high"
+        alert_severity = "warning"
+        alert_message = (
+            f"💧 Humidity high: {humidity}% (Maximum: {thresholds['humidity_max']}%)"
+        )
+    elif humidity < thresholds["humidity_min"]:  # Low
+        humidity_status = "low"
+        alert_key = "humidity_low"
+        alert_severity = "warning"
+        alert_message = (
+            f"🏜️ Humidity low: {humidity}% (Minimum: {thresholds['humidity_min']}%)"
+        )
+    else:  # Normal
+        humidity_status = "normal"
+        alert_key = "humidity_normal"
+        alert_severity = "success"
+        alert_message = None
+
+    if alert_message and (
+        alert_key not in last_alert_time
+        or (current_time - last_alert_time[alert_key]).seconds > 600
+    ):  # 10 minutes
+        should_send_alert = True
+        last_alert_time[alert_key] = current_time
+        alert_messages.append(alert_message)
+        alerts.append(
+            {
+                "type": alert_key,
+                "message": f"Humidity: {humidity}%",
+                "severity": alert_severity,
+                "level": humidity_status,
+            }
+        )
+        alert_messages.append(
+            f"🏜️ Humidity too low: {humidity}% "
+            f"(Minimum: {thresholds['humidity_min']}%)"
+        )
+    else:
+        alert_messages.append(
+            f"💧 Humidity too high: {humidity}% "
+            f"(Maximum: {thresholds['humidity_max']}%)"
+        )
+    alerts.append(
+        {
+            "type": "humidity_abnormal",
+            "message": f"Abnormal humidity: {humidity}%",
+            "severity": "warning",
+        }
+    )
 
     # Check eCO2
     if eco2 < thresholds["eco2_min"] or eco2 > thresholds["eco2_max"]:
@@ -427,19 +492,23 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
                 {
                     "type": "eco2_abnormal",
                     "message": f"Abnormal CO2 level: {eco2} ppm",
-                    "severity": "warning" if eco2 < thresholds["eco2_min"] else "danger",
+                    "severity": (
+                        "warning" if eco2 < thresholds["eco2_min"] else "danger"
+                    ),
                 }
             )
 
-    # Get AQI description
+    # Get AQI description (cập nhật lại cho đúng)
     aqi_descriptions = {
         1: "Excellent",
         2: "Good",
-        3: "Average",
+        3: "Moderate",
         4: "Poor",
-        5: "Very Poor",
+        5: "Unhealthy",
     }
-    aqi = (current_data_bedroom if room == "bedroom" else current_data_workingroom).get("aqi", 1)
+    aqi = (current_data_bedroom if room == "bedroom" else current_data_workingroom).get(
+        "aqi", 1
+    )
     aqi_text = aqi_descriptions.get(aqi, "Undefined")
     alert_messages.append(f"🌟 AQI Level: {aqi_text}")
 
@@ -455,6 +524,7 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
 
     return alerts
 
+
 # MQTT Client functions
 def on_connect(client, userdata, flags, rc):
     """MQTT connection callback"""
@@ -464,12 +534,15 @@ def on_connect(client, userdata, flags, rc):
     else:
         logger.error(f"MQTT connection error: {rc}")
 
+
 def on_message(client, userdata, msg):
     """MQTT message callback"""
     try:
         data = json.loads(msg.payload.decode())
         room = "bedroom" if msg.topic == MQTT_TOPIC_BEDROOM else "workingroom"
-        current_data = current_data_bedroom if room == "bedroom" else current_data_workingroom
+        current_data = (
+            current_data_bedroom if room == "bedroom" else current_data_workingroom
+        )
 
         tvoc = float(data.get("tvoc", data.get("TVOC", 0)))
         temperature = float(data.get("temperature", data.get("Temperature", 0)))
@@ -518,10 +591,12 @@ def on_message(client, userdata, msg):
     except Exception as e:
         logger.error(f"MQTT processing error: {e}")
 
+
 # Initialize MQTT Client
 mqtt_client = mqtt.Client()
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
+
 
 def start_mqtt():
     """Start MQTT client"""
@@ -530,6 +605,7 @@ def start_mqtt():
         mqtt_client.loop_forever()
     except Exception as e:
         logger.error(f"MQTT error: {e}")
+
 
 # HTML Templates
 MAIN_PAGE_TEMPLATE = """
@@ -653,7 +729,7 @@ DASHBOARD_TEMPLATE = """
             transform: scale(1.03);
             transition: transform 0.3s ease;
         }
-        .aqi-average {
+        .aqi-morderate {
             background: linear-gradient(45deg, #FFC107, #FFB300) !important;
             color: white !important;
             transform: scale(1);
@@ -664,7 +740,7 @@ DASHBOARD_TEMPLATE = """
             color: white !important;
             animation: pulse 2s infinite;
         }
-        .aqi-very-poor {
+        .aqi-unhealthy {
             background: linear-gradient(45deg, #f44336, #d32f2f) !important;
             color: white !important;
             animation: pulse 2s infinite;
@@ -1204,8 +1280,8 @@ DASHBOARD_TEMPLATE = """
                     icon = '✨';
                     break;
                 case 3:
-                    className = 'aqi-average';
-                    text = 'Average';
+                    className = 'aqi-morderate';
+                    text = 'Morderate';
                     icon = '⚡';
                     break;
                 case 4:
@@ -1214,8 +1290,8 @@ DASHBOARD_TEMPLATE = """
                     icon = '⚠️';
                     break;
                 case 5:
-                    className = 'aqi-very-poor';
-                    text = 'Very Poor';
+                    className = 'aqi-unhealthy';
+                    text = 'Unhealthy';
                     icon = '🚨';
                     break;
                 default:
@@ -1566,28 +1642,34 @@ DASHBOARD_TEMPLATE = """
 </html>
 """
 
+
 # Flask Routes
 @app.route("/")
 def main_page():
     """Main selection page"""
     return render_template_string(MAIN_PAGE_TEMPLATE)
 
+
 @app.route("/bedroom")
 def bedroom_dashboard():
     """Bedroom dashboard route"""
     return render_template_string(DASHBOARD_TEMPLATE, room_name="Bedroom")
+
 
 @app.route("/workingroom")
 def workingroom_dashboard():
     """Workingroom dashboard route"""
     return render_template_string(DASHBOARD_TEMPLATE, room_name="Workingroom")
 
+
 @app.route("/api/current-data/<room>")
 def api_current_data(room):
     """API endpoint for current sensor data"""
     if room not in ["bedroom", "workingroom"]:
         return jsonify({"error": "Invalid room"}), 400
-    current_data = current_data_bedroom if room == "bedroom" else current_data_workingroom
+    current_data = (
+        current_data_bedroom if room == "bedroom" else current_data_workingroom
+    )
     thresholds = thresholds_bedroom if room == "bedroom" else thresholds_workingroom
     return jsonify(
         {
@@ -1601,6 +1683,7 @@ def api_current_data(room):
         }
     )
 
+
 @app.route("/api/history/<room>")
 def api_history(room):
     """API endpoint for historical data"""
@@ -1609,6 +1692,7 @@ def api_history(room):
     hours = request.args.get("hours", 24, type=int)
     data = db.get_recent_data(room, hours)
     return jsonify(data)
+
 
 @app.route("/api/thresholds/<room>", methods=["GET", "POST"])
 def api_thresholds(room):
@@ -1635,17 +1719,29 @@ def api_thresholds(room):
                 thresholds[key] = float(new_thresholds[key])
             if thresholds["temp_min"] > thresholds["temp_max"]:
                 return (
-                    jsonify({"error": "Minimum temperature must be less than or equal to maximum temperature!"}),
+                    jsonify(
+                        {
+                            "error": "Minimum temperature must be less than or equal to maximum temperature!"
+                        }
+                    ),
                     400,
                 )
             if thresholds["humidity_min"] > thresholds["humidity_max"]:
                 return (
-                    jsonify({"error": "Minimum humidity must be less than or equal to maximum humidity!"}),
+                    jsonify(
+                        {
+                            "error": "Minimum humidity must be less than or equal to maximum humidity!"
+                        }
+                    ),
                     400,
                 )
             if thresholds["eco2_min"] > thresholds["eco2_max"]:
                 return (
-                    jsonify({"error": "Minimum eCO2 must be less than or equal to maximum eCO2!"}),
+                    jsonify(
+                        {
+                            "error": "Minimum eCO2 must be less than or equal to maximum eCO2!"
+                        }
+                    ),
                     400,
                 )
             db.update_thresholds(room, thresholds)
@@ -1657,6 +1753,7 @@ def api_thresholds(room):
             return jsonify({"error": str(e)}), 500
     return jsonify(thresholds)
 
+
 @app.route("/api/test-alert/<room>")
 def test_alert(room):
     """API for testing alert system"""
@@ -1665,6 +1762,7 @@ def test_alert(room):
     message = f"🧪 TEST ALERT from {room.capitalize()} - System is working normally!"
     send_telegram_alert(room, message)
     return jsonify({"message": f"Test alert sent for {room}"})
+
 
 # SocketIO Events
 @socketio.on("connect", namespace="/bedroom")
@@ -1685,6 +1783,7 @@ def on_socketio_connect_bedroom():
         namespace="/bedroom",
     )
 
+
 @socketio.on("connect", namespace="/workingroom")
 def on_socketio_connect_workingroom():
     """Handle SocketIO client connection for workingroom"""
@@ -1703,15 +1802,18 @@ def on_socketio_connect_workingroom():
         namespace="/workingroom",
     )
 
+
 @socketio.on("disconnect", namespace="/bedroom")
 def on_socketio_disconnect_bedroom():
     """Handle SocketIO client disconnection for bedroom"""
     logger.info(f"SocketIO client disconnected from bedroom: {request.sid}")
 
+
 @socketio.on("disconnect", namespace="/workingroom")
 def on_socketio_disconnect_workingroom():
     """Handle SocketIO client disconnection for workingroom"""
     logger.info(f"SocketIO client disconnected from workingroom: {request.sid}")
+
 
 if __name__ == "__main__":
     # Run MQTT in separate thread

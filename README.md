@@ -64,7 +64,7 @@ TELEGRAM_CHAT_ID=your-chat-id
 
 ```bash
 #Chạy trên 3 Terminal khác nhau
-python3 server3.py 
+python3 server3.py
 python3 test_data.py bedroom #Kiểm thử bằng dữ liệu giả phòng ngủ
 python3 test_data.py workingroom #Kiểm thử bằng dữ liệu giả phòng làm việc
 ```
