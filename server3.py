@@ -55,7 +55,7 @@ DB_CONFIG = {
     "database": DB_NAME,
 }
 
-# Default thresholds for TVOC
+# Default thresholds for TVOC and eCO2
 DEFAULT_THRESHOLDS = {
     "tvoc_good": 65,  # ppb
     "tvoc_normal": 220,  # ppb
@@ -64,8 +64,9 @@ DEFAULT_THRESHOLDS = {
     "temp_max": 35,
     "humidity_min": 30,
     "humidity_max": 70,
-    "eco2_min": 400,  # ppm
-    "eco2_max": 1000,  # ppm
+    "eco2_min": 400,  # ppm (low threshold)
+    "eco2_normal": 1000,  # ppm (normal threshold)
+    "eco2_high": 2000,  # ppm (high threshold)
 }
 
 # Global variables for data storage
@@ -397,6 +398,7 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
         alert_key = "temp_normal"
         alert_severity = "success"
         alert_message = None
+<<<<<<< HEAD
 
     if alert_message and (
         alert_key not in last_alert_time
@@ -495,6 +497,117 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
                     ),
                 }
             )
+=======
+
+    if alert_message and (
+        alert_key not in last_alert_time
+        or (current_time - last_alert_time[alert_key]).seconds > 600
+    ):  # 10 minutes
+        should_send_alert = True
+        last_alert_time[alert_key] = current_time
+        alert_messages.append(alert_message)
+        alerts.append(
+            {
+                "type": alert_key,
+                "message": f"Temperature: {temperature}°C",
+                "severity": alert_severity,
+                "level": temp_status,
+            }
+        )
+
+    # Check humidity with new thresholds
+    if humidity > thresholds["humidity_max"]:  # High
+        humidity_status = "high"
+        alert_key = "humidity_high"
+        alert_severity = "warning"
+        alert_message = (
+            f"💧 Humidity high: {humidity}% (Maximum: {thresholds['humidity_max']}%)"
+        )
+    elif humidity < thresholds["humidity_min"]:  # Low
+        humidity_status = "low"
+        alert_key = "humidity_low"
+        alert_severity = "warning"
+        alert_message = (
+            f"🏜️ Humidity low: {humidity}% (Minimum: {thresholds['humidity_min']}%)"
+        )
+    else:  # Normal
+        humidity_status = "normal"
+        alert_key = "humidity_normal"
+        alert_severity = "success"
+        alert_message = None
+
+    if alert_message and (
+        alert_key not in last_alert_time
+        or (current_time - last_alert_time[alert_key]).seconds > 600
+    ):  # 10 minutes
+        should_send_alert = True
+        last_alert_time[alert_key] = current_time
+        alert_messages.append(alert_message)
+        alerts.append(
+            {
+                "type": alert_key,
+                "message": f"Humidity: {humidity}%",
+                "severity": alert_severity,
+                "level": humidity_status,
+            }
+        )
+        alert_messages.append(
+            f"🏜️ Humidity too low: {humidity}% "
+            f"(Minimum: {thresholds['humidity_min']}%)"
+        )
+    else:
+        alert_messages.append(
+            f"💧 Humidity too high: {humidity}% "
+            f"(Maximum: {thresholds['humidity_max']}%)"
+        )
+    alerts.append(
+        {
+            "type": "humidity_abnormal",
+            "message": f"Abnormal humidity: {humidity}%",
+            "severity": "warning",
+        }
+    )
+
+    # Check eCO2 with new thresholds
+    if eco2 > thresholds["eco2_high"]:  # Too high (> 2000 ppm)
+        eco2_status = "too_high"
+        alert_key = "eco2_too_high"
+        alert_severity = "danger"
+        alert_message = f"🚨 CO2 level too high: {eco2} ppm (Critical level > {thresholds['eco2_high']} ppm)"
+    elif eco2 > thresholds["eco2_normal"]:  # High (1000-2000 ppm)
+        eco2_status = "high"
+        alert_key = "eco2_high"
+        alert_severity = "warning"
+        alert_message = f"⚠️ CO2 level high: {eco2} ppm"
+    elif eco2 >= thresholds["eco2_min"]:  # Normal (400-1000 ppm)
+        eco2_status = "normal"
+        alert_key = "eco2_normal"
+        alert_severity = "success"
+        alert_message = None
+    else:  # Low (< 400 ppm)
+        eco2_status = "low"
+        alert_key = "eco2_low"
+        alert_severity = "warning"
+        alert_message = (
+            f"🌿 CO2 level too low: {eco2} ppm (Minimum: {thresholds['eco2_min']} ppm)"
+        )
+
+    if alert_message and (
+        alert_key not in last_alert_time
+        or (current_time - last_alert_time[alert_key]).seconds > 600
+    ):  # 10 minutes
+        should_send_alert = True
+        last_alert_time[alert_key] = current_time
+        alert_messages.append(alert_message)
+        alerts.append(
+            {
+                "type": alert_key,
+                "message": f"CO2 Level: {eco2} ppm",
+                "severity": alert_severity,
+                "level": eco2_status,
+            }
+        )
+>>>>>>> 2b20299db8633deb2585ff935350567929384196
 
     # Get AQI description
     aqi_descriptions = {
