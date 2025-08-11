@@ -1,6 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌱 Air Quality Monitoring - Select Room</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            padding: 20px;
+            text-align: center;
+        }
+        .header {
+            margin-bottom: 40px;
+            color: white;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        .card h2 {
+            font-size: 1.8rem;
+            color: #444;
+            margin-bottom: 10px;
+        }
+        .card p {
+            color: #666;
+            font-size: 1rem;
+        }
+        .card.bedroom {
+            border-left: 5px solid #ff6b6b;
+        }
+        .card.workingroom {
+            border-left: 5px solid #4ecdc4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 Air Quality Monitoring</h1>
+            <p>Select a room to monitor indoor air quality</p>
+        </div>
+        <div class="grid">
+            <div class="card bedroom" onclick="window.location.href='/bedroom'">
+                <h2>Bedroom</h2>
+                <p>Monitor air quality in the bedroom</p>
+            </div>
+            <div class="card workingroom" onclick="window.location.href='/workingroom'">
+                <h2>Working Room</h2>
+                <p>Monitor air quality in the working room</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+DASHBOARD_TEMPLATE = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🌱 {{ room_name }} Air Quality Dashboard</title>
@@ -20,7 +118,7 @@
             transform: scale(1.03);
             transition: transform 0.3s ease;
         }
-        .aqi-average {
+        .aqi-morderate {
             background: linear-gradient(45deg, #FFC107, #FFB300) !important;
             color: white !important;
             transform: scale(1);
@@ -31,7 +129,7 @@
             color: white !important;
             animation: pulse 2s infinite;
         }
-        .aqi-very-poor {
+        .aqi-unhealthy {
             background: linear-gradient(45deg, #f44336, #d32f2f) !important;
             color: white !important;
             animation: pulse 2s infinite;
@@ -179,15 +277,38 @@
             display: inline-block;
             margin-top: 10px;
         }
+        /* TVOC Status Classes */
+        .status-excellent {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+        .status-good {
+            background: linear-gradient(45deg, #8BC34A, #7CB342);
+            color: white;
+        }
+        .status-moderate {
+            background: linear-gradient(45deg, #FFC107, #FFB300);
+            color: white;
+        }
+        .status-poor {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+            color: white;
+        }
+        .status-unhealthy {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        /* Temperature, Humidity, eCO2 Status Classes */
         .status-normal {
-            background: linear-gradient(45deg, #4caf50, #45a049);
+            background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
         }
-        .status-warning {
-            background: linear-gradient(45deg, #ff9800, #f57c00);
+        .status-low {
+            background: linear-gradient(45deg, #3F51B5, #303F9F);
             color: white;
         }
-        .status-danger {
+        .status-high {
             background: linear-gradient(45deg, #f44336, #d32f2f);
             color: white;
             animation: pulse 2s infinite;
@@ -349,7 +470,7 @@
                     0<span class="sensor-unit">ppb</span>
                 </div>
                 <div class="sensor-status status-normal" id="tvocStatus">
-                    Normal
+                    TVOC Level: Excellent
                 </div>
             </div>
             <!-- Temperature Card -->
@@ -536,14 +657,44 @@
 
         function updateSensorDisplay(data) {
             document.getElementById("tvocValue").innerHTML = 
-                `${data.tvoc.toFixed(2)}<span class="sensor-unit">ppb</span>`;
+                `${Math.round(data.tvoc)}<span class="sensor-unit">ppb</span>`;
             document.getElementById("tempValue").innerHTML = 
                 `${data.temperature}<span class="sensor-unit">°C</span>`;
             document.getElementById("humidityValue").innerHTML = 
-                `${data.humidity}<span class="sensor-unit">%</span>`;
+                `${data.humidity}<span class="sensor-unit">%"</span>`;
             document.getElementById("eco2Value").innerHTML = 
                 `${data.eco2}<span class="sensor-unit">ppm</span>`;
-            updateSensorStatus("tvoc", data.tvoc);
+            // Thay đổi log mức TVOC ngay trên status
+            // Lấy các ngưỡng TVOC từ form
+            const tvocThresholds = {
+                excellent: 65,   // 0-65: Excellent
+                good: 220,      // 65-220: Good
+                moderate: 650,  // 220-650: Moderate
+                poor: 2200     // 650-2200: Poor
+                               // >2200: Unhealthy
+            };
+
+            let tvocLevel = "";
+            let statusClass = "";
+            if (data.tvoc < tvocThresholds.excellent) {
+                tvocLevel = "Excellent";
+                statusClass = "status-excellent";
+            } else if (data.tvoc < tvocThresholds.good) {
+                tvocLevel = "Good";
+                statusClass = "status-good";
+            } else if (data.tvoc < tvocThresholds.moderate) {
+                tvocLevel = "Moderate";
+                statusClass = "status-moderate";
+            } else if (data.tvoc < tvocThresholds.poor) {
+                tvocLevel = "Poor";
+                statusClass = "status-poor";
+            } else {
+                tvocLevel = "Unhealthy";
+                statusClass = "status-unhealthy";
+            }
+            const tvocStatusEl = document.getElementById("tvocStatus");
+            tvocStatusEl.className = `sensor-status ${statusClass}`;
+            tvocStatusEl.textContent = `${tvocLevel}`;
             updateSensorStatus("temp", data.temperature);
             updateSensorStatus("humidity", data.humidity);
             updateSensorStatus("eco2", data.eco2);
@@ -571,8 +722,8 @@
                     icon = '✨';
                     break;
                 case 3:
-                    className = 'aqi-average';
-                    text = 'Average';
+                    className = 'aqi-morderate';
+                    text = 'Morderate';
                     icon = '⚡';
                     break;
                 case 4:
@@ -581,8 +732,8 @@
                     icon = '⚠️';
                     break;
                 case 5:
-                    className = 'aqi-very-poor';
-                    text = 'Very Poor';
+                    className = 'aqi-unhealthy';
+                    text = 'Unhealthy';
                     icon = '🚨';
                     break;
                 default:
@@ -595,24 +746,43 @@
         }
 
         function updateSensorStatus(sensorType, value) {
+            // Bỏ qua TVOC vì đã được xử lý riêng
+            if (sensorType === "tvoc") return;
+
             const statusEl = document.getElementById(
                 sensorType === "temp" ? "tempStatus" : sensorType + "Status"
             );
-            let status = "status-normal";
-            let text = "Normal";
-            if (sensorType === "tvoc" && value > 660) {
-                status = "status-danger";
-                text = "Too High";
-            } else if (sensorType === "temp" && (value < 18 || value > 35)) {
-                status = "status-warning";
-                text = "Abnormal";
-            } else if (sensorType === "humidity" && (value < 30 || value > 70)) {
-                status = "status-warning";
-                text = "Abnormal";
-            } else if (sensorType === "eco2" && (value < 400 || value > 1000)) {
-                status = "status-warning";
-                text = "Abnormal";
+            
+            // Lấy các ngưỡng từ form
+            const thresholds = {
+                temp: { 
+                    min: parseFloat(document.getElementById("tempMin").value), 
+                    max: parseFloat(document.getElementById("tempMax").value)
+                },
+                humidity: { 
+                    min: parseFloat(document.getElementById("humidityMin").value), 
+                    max: parseFloat(document.getElementById("humidityMax").value)
+                },
+                eco2: { 
+                    min: parseFloat(document.getElementById("eco2Min").value), 
+                    max: parseFloat(document.getElementById("eco2Max").value)
+                }
+            };
+
+            const th = thresholds[sensorType];
+            let status, text;
+
+            if (value < th.min) {
+                status = "status-low";
+                text = "LOW";
+            } else if (value > th.max) {
+                status = "status-high";
+                text = "HIGH";
+            } else {
+                status = "status-normal";
+                text = "NORMAL";
             }
+
             statusEl.className = `sensor-status ${status}`;
             statusEl.textContent = text;
         }
