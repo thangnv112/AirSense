@@ -613,7 +613,7 @@ def check_thresholds_and_alert(room, tvoc, temperature, humidity, eco2):
     aqi_descriptions = {
         1: "Excellent",
         2: "Good",
-        3: "Morderate",
+        3: "Moderate",
         4: "Poor",
         5: "Unhealthy",
     }
@@ -840,7 +840,7 @@ DASHBOARD_TEMPLATE = """
             transform: scale(1.03);
             transition: transform 0.3s ease;
         }
-        .aqi-morderate {
+        .aqi-moderate {
             background: linear-gradient(45deg, #FFC107, #FFB300) !important;
             color: white !important;
             transform: scale(1);
@@ -1434,8 +1434,8 @@ DASHBOARD_TEMPLATE = """
                     icon = '✨';
                     break;
                 case 3:
-                    className = 'aqi-morderate';
-                    text = 'Morderate';
+                    className = 'aqi-moderate';
+                    text = 'Moderate';
                     icon = '⚡';
                     break;
                 case 4:
